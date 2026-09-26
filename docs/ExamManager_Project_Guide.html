@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExamManager Project Guide</title>
+<meta name="description" content="The problem ExamManager solves, what it can do, and a full user and administrator guide.">
+<style>
+:root {
+  --bg: #F7F7F5; --surface: #FFFFFF; --sunken: #F0F0EC;
+  --ink: #17181B; --ink-2: #45474D; --ink-3: #6E7077; --line: #E3E3DE;
+  --primary: #1F5BD8; --primary-soft: #E8EFFC; --primary-text: #1A4DB8;
+  --ok: #1C7F46; --ok-soft: #E6F4EC; --warn: #96590A; --warn-soft: #FBF1E1;
+  --bad: #BD2A2A; --bad-soft: #FBE9E9; --info-soft: #EAF1FB;
+  --code-bg: #F0F0EC;
+  --r: 10px; --maxw: 820px;
+  --font: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121316; --surface: #1A1B1F; --sunken: #222328;
+    --ink: #ECECEE; --ink-2: #B9BAC0; --ink-3: #8C8E95; --line: #2E3036;
+    --primary: #6C9BFF; --primary-soft: #1D2A45; --primary-text: #9DBBFF;
+    --ok: #5BC98A; --ok-soft: #173024; --warn: #E5A951; --warn-soft: #33270F;
+    --bad: #F07A7A; --bad-soft: #3A1B1B; --info-soft: #1B2638; --code-bg: #24262B;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121316; --surface: #1A1B1F; --sunken: #222328;
+  --ink: #ECECEE; --ink-2: #B9BAC0; --ink-3: #8C8E95; --line: #2E3036;
+  --primary: #6C9BFF; --primary-soft: #1D2A45; --primary-text: #9DBBFF;
+  --ok: #5BC98A; --ok-soft: #173024; --warn: #E5A951; --warn-soft: #33270F;
+  --bad: #F07A7A; --bad-soft: #3A1B1B; --info-soft: #1B2638; --code-bg: #24262B;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+a { color: var(--primary-text); }
+code, kbd { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+pre { font-family: var(--mono); font-size: 13.5px; background: var(--code-bg); padding: 14px 16px; border-radius: var(--r); overflow-x: auto; line-height: 1.55; margin: 12px 0 18px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+
+.layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+nav.toc { position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; padding: 32px 20px 32px 24px; border-right: 1px solid var(--line); font-size: 14px; }
+.toc-brand { font-weight: 700; font-size: 15px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+.toc-brand span.mark { width: 28px; height: 28px; border-radius: 7px; background: var(--primary); display: grid; place-items: center; color: #fff; }
+.toc h4 { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 22px 0 6px; }
+.toc ol { list-style: none; padding: 0; margin: 0; }
+.toc li a { display: block; padding: 4px 8px; margin-left: -8px; border-radius: 6px; color: var(--ink-2); text-decoration: none; }
+.toc li a:hover { background: var(--sunken); color: var(--ink); }
+.toc .theme-btn { margin-top: 26px; font: inherit; font-size: 13px; background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+
+main { padding: 48px 48px 96px; min-width: 0; }
+.doc { max-width: var(--maxw); }
+header.cover { padding-bottom: 32px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--primary-text); letter-spacing: .04em; text-transform: uppercase; }
+h1 { font-size: 40px; line-height: 1.15; margin: 8px 0 14px; letter-spacing: -0.02em; }
+.lede { font-size: 18.5px; color: var(--ink-2); margin: 0; max-width: 64ch; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 20px; font-size: 13.5px; color: var(--ink-3); }
+
+.part { margin-top: 56px; }
+.part-head { display: flex; gap: 16px; align-items: baseline; padding: 20px 0 6px; border-top: 3px solid var(--ink); }
+.part-num { font-size: 13px; font-weight: 700; color: var(--ink-3); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.part-head h2 { font-size: 30px; margin: 0; letter-spacing: -0.015em; line-height: 1.2; }
+.part-intro { color: var(--ink-2); margin: 6px 0 8px; }
+section.sec { margin-top: 44px; scroll-margin-top: 16px; }
+h3 { font-size: 23px; margin: 0 0 10px; letter-spacing: -0.01em; line-height: 1.3; }
+h4 { font-size: 17px; margin: 28px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; margin: 0 0 16px; }
+li { margin-bottom: 6px; }
+li::marker { color: var(--ink-3); }
+.muted { color: var(--ink-3); }
+
+.callout { border-radius: var(--r); padding: 14px 18px; margin: 16px 0 20px; border-left: 4px solid var(--primary); background: var(--info-soft); }
+.callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+.callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+.callout.bad { border-color: var(--bad); background: var(--bad-soft); }
+.callout strong:first-child { display: block; margin-bottom: 2px; }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 16px 0 22px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
+.card h5 { font-size: 15.5px; margin: 0 0 6px; }
+.card p { font-size: 14.5px; color: var(--ink-2); margin: 0; }
+
+.table-wrap { overflow-x: auto; margin: 14px 0 22px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--sunken); font-weight: 650; font-size: 13.5px; color: var(--ink-2); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin: 16px 0 24px; }
+.flow .step { flex: 1 1 130px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; font-size: 13.5px; color: var(--ink-2); position: relative; }
+.flow .step b { display: block; color: var(--ink); font-size: 14.5px; margin-bottom: 2px; }
+.flow .step .n { font-size: 11.5px; font-weight: 700; color: var(--primary-text); letter-spacing: .06em; }
+.flow .step.sys { border-color: var(--primary); }
+
+.steps { counter-reset: s; list-style: none; padding: 0; }
+.steps > li { counter-increment: s; position: relative; padding-left: 42px; margin-bottom: 14px; }
+.steps > li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 28px; height: 28px; border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+
+.chip { display: inline-block; font-size: 12.5px; font-weight: 650; padding: 2px 10px; border-radius: 99px; background: var(--sunken); color: var(--ink-2); white-space: nowrap; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.info { background: var(--primary-soft); color: var(--primary-text); }
+
+.tree { font-family: var(--mono); font-size: 13.5px; background: var(--code-bg); border-radius: var(--r); padding: 14px 16px; white-space: pre; overflow-x: auto; line-height: 1.5; margin: 12px 0 18px; }
+
+details.faq { border-top: 1px solid var(--line); padding: 12px 0; }
+details.faq:last-of-type { border-bottom: 1px solid var(--line); }
+details.faq summary { cursor: pointer; font-weight: 600; }
+details.faq > div { color: var(--ink-2); margin-top: 8px; }
+
+footer.end { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--ink-3); }
+
+@media (max-width: 900px) {
+  .layout { display: block; }
+  nav.toc { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 20px 16px; }
+  .toc ol { columns: 2; column-gap: 16px; }
+  main { padding: 28px 16px 64px; }
+  h1 { font-size: 30px; }
+  .part-head { flex-direction: column; gap: 2px; }
+  .part-head h2 { font-size: 25px; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) { .toc ol { columns: 1; } }
+@media print {
+  nav.toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  body { background: #fff; font-size: 11.5pt; }
+  .part { break-before: page; }
+  section.sec, .card, .table-wrap, .callout { break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc" aria-label="Contents">
+  <div class="toc-brand"><span class="mark" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="m9 13 2.2 2.2L15.5 11"/></svg>
+  </span>ExamManager guide</div>
+
+  <h4>Part 1 · Overview</h4>
+  <ol>
+    <li><a href="#problem">The problem</a></li>
+    <li><a href="#solution">The solution</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#principles">Design principles</a></li>
+    <li><a href="#who">Who uses it</a></li>
+    <li><a href="#limits">Limits and requirements</a></li>
+  </ol>
+
+  <h4>Part 2 · User guide</h4>
+  <ol>
+    <li><a href="#install">Installing and starting</a></li>
+    <li><a href="#accounts">Teacher accounts</a></li>
+    <li><a href="#signin">Signing in and navigating</a></li>
+    <li><a href="#overview-page">Overview page</a></li>
+    <li><a href="#setup">Setting up an exam</a></li>
+    <li><a href="#individual">Adding scripts one by one</a></li>
+    <li><a href="#batch">Uploading a whole class</a></li>
+    <li><a href="#queue">The marking queue</a></li>
+    <li><a href="#how-marking">How a script is marked</a></li>
+    <li><a href="#results">Results page</a></li>
+    <li><a href="#edit">Changing a mark</a></li>
+    <li><a href="#reports">Reports and printing</a></li>
+    <li><a href="#export">Spreadsheet export</a></li>
+    <li><a href="#add-more">Adding students later</a></li>
+    <li><a href="#settings">Settings and clean-up</a></li>
+    <li><a href="#admin">Administration</a></li>
+    <li><a href="#config">Configuration reference</a></li>
+    <li><a href="#data">Where data is stored</a></li>
+    <li><a href="#security">Security and privacy</a></li>
+    <li><a href="#trouble">Troubleshooting</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+  <button class="theme-btn" id="themeBtn" type="button">Switch light / dark</button>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Project guide · for administrators, school leaders and teachers</div>
+  <h1>ExamManager</h1>
+  <p class="lede">AI-assisted exam marking for schools. Teachers photograph or upload students' answer scripts; an AI examiner marks each script against the school's own question paper and marking scheme; the system (never the AI) adds up the marks; and the teacher keeps the final say on every result.</p>
+  <div class="meta-row">
+    <span>Part 1: the problem and what the product can do</span>
+    <span>Part 2: how every feature works and how to use it</span>
+  </div>
+</header>
+
+<!-- ═════════════════════════ PART 1 ═════════════════════════ -->
+<div class="part" id="part1">
+  <div class="part-head"><span class="part-num">Part 1</span><h2>The problem and the product's capabilities</h2></div>
+  <p class="part-intro">Why ExamManager exists, what it does, and what to expect from it before you install it.</p>
+
+  <section class="sec" id="problem">
+    <h3>1. The problem</h3>
+    <p>Marking is one of the largest and least visible workloads in a school. Each term, every teacher marks several rounds of tests, mid-terms, end-of-term exams and mocks, for several classes and streams, often with 40–80 students per stream. A single teacher can face hundreds of handwritten scripts in one week, each of which has to be read against a marking scheme, scored question by question, totalled, converted to a percentage, entered into a class list, and commented on.</p>
+    <h4>What goes wrong today</h4>
+    <ul>
+      <li><strong>Time.</strong> Marking a full class set by hand takes days. That time comes out of lesson preparation, remedial teaching and rest, and results reach students late, when the feedback is least useful.</li>
+      <li><strong>Consistency.</strong> The same answer can get different marks depending on whether it was the fifth or the fiftieth script, which teacher marked it, or how tired they were. Standards drift across a pile and between streams.</li>
+      <li><strong>Arithmetic and transcription errors.</strong> Adding up stage marks, converting raw marks to percentages, and copying totals into a mark sheet are all manual steps where mistakes creep in and are hard to spot.</li>
+      <li><strong>Thin feedback.</strong> Under time pressure, written comments shrink to a tick, a number, or "good work". Students and parents rarely get a clear picture of strengths and gaps.</li>
+      <li><strong>Poor class-level insight.</strong> Mean, highest, lowest and score distribution for a class are rarely calculated, so weak topics across a class go unnoticed.</li>
+      <li><strong>Paper-based records.</strong> Scripts are handed back or lost, and there's no searchable history of which student got what mark, when, and why.</li>
+    </ul>
+    <h4>Why a generic AI chatbot doesn't solve it</h4>
+    <p>Pasting scripts into a chatbot one at a time is slow, loses the marking scheme between conversations, has no record-keeping, does arithmetic inconsistently, can't process a whole class, and gives the teacher no structured way to check or correct results. Schools need a tool built around the actual marking workflow: <em>set up the paper once, feed in a whole class, review, correct and export.</em></p>
+  </section>
+
+  <section class="sec" id="solution">
+    <h3>2. The solution in one picture</h3>
+    <p>ExamManager is a web application that runs on one computer at the school. Teachers use it from any phone, tablet or laptop on the same network, in a normal web browser. Nothing needs installing on the teachers' devices.</p>
+    <div class="flow" role="list">
+      <div class="step" role="listitem"><span class="n">1 · TEACHER</span><b>Set up the exam</b>Class, subject, total marks, question paper and marking scheme.</div>
+      <div class="step" role="listitem"><span class="n">2 · TEACHER</span><b>Add scripts</b>Photograph pages with the device camera, or upload a whole class as a ZIP.</div>
+      <div class="step sys" role="listitem"><span class="n">3 · AI</span><b>Marks each stage</b>Reads the paper, the scheme and the script, and scores each question stage.</div>
+      <div class="step sys" role="listitem"><span class="n">4 · SYSTEM</span><b>Adds it up</b>Totals the stage marks, converts to a percentage, and flags anything suspicious.</div>
+      <div class="step" role="listitem"><span class="n">5 · TEACHER</span><b>Review and export</b>Check flags, adjust marks, print reports, download the class spreadsheet.</div>
+    </div>
+    <p>Marking happens in the background. A teacher can keep photographing the next student, or close the browser entirely, while earlier scripts are being marked.</p>
+  </section>
+
+  <section class="sec" id="capabilities">
+    <h3>3. Capabilities</h3>
+
+    <h4>Exam setup</h4>
+    <div class="grid-2">
+      <div class="card"><h5>One setup per paper</h5><p>Enter year, term, class, stream, subject, exam name and total marks once. Every student added to that session is marked against the same paper and scheme.</p></div>
+      <div class="card"><h5>Paper and scheme as photos or PDFs</h5><p>Upload or photograph the question paper and marking scheme (PDF, JPG, PNG, WEBP), plus optional typed marking notes for the AI.</p></div>
+      <div class="card"><h5>Total-marks check</h5><p>If the marking scheme has readable text, the system checks whether its stage marks add up to the total you entered and warns you if they don't.</p></div>
+      <div class="card"><h5>Built-in curriculum lists</h5><p>Ready-made lists of classes (S1–S6, P1–P8), terms and 38 subjects, including local languages, so setup is a few taps.</p></div>
+    </div>
+
+    <h4>Capturing scripts</h4>
+    <div class="grid-2">
+      <div class="card"><h5>Camera capture</h5><p>Photograph pages straight from a phone or tablet camera inside the browser, choosing between front and back cameras.</p></div>
+      <div class="card"><h5>File upload</h5><p>Choose photos or a PDF from the device, or drag and drop them. PDFs are split into page images automatically.</p></div>
+      <div class="card"><h5>Blur and lighting check</h5><p>Every photo is checked for blur, darkness and over-exposure. Individual uploads are blocked until bad pages are retaken, so the AI never marks an unreadable page.</p></div>
+      <div class="card"><h5>Whole-class ZIP or folder upload</h5><p>Upload one ZIP (up to 500 MB), or pick a folder, containing one sub-folder per student. The system reads student IDs and names from folder names and shows a review screen before anything is marked.</p></div>
+    </div>
+
+    <h4>AI marking</h4>
+    <div class="grid-2">
+      <div class="card"><h5>Stage-by-stage scoring</h5><p>The AI reads the whole marking scheme, lists every scoring stage, and marks only the stages the student attempted, never above each stage's maximum.</p></div>
+      <div class="card"><h5>System arithmetic</h5><p>The AI returns only a list of stage marks. ExamManager adds them up and computes the percentage, so there are no AI arithmetic errors.</p></div>
+      <div class="card"><h5>Examiner's report</h5><p>A 220–280 word written report per student covering overall performance, strongest and weakest areas with examples, and practical recommendations.</p></div>
+      <div class="card"><h5>Automatic sanity checks</h5><p>Results where the stage marks exceed the paper total, include negative numbers, can't be read, or where the report was cut off are flagged <span class="chip warn">Needs review</span> instead of being quietly accepted.</p></div>
+    </div>
+
+    <h4>Speed and reliability</h4>
+    <div class="grid-2">
+      <div class="card"><h5>Background queue</h5><p>Scripts wait in a queue and are marked in parallel. The queue can be paused and resumed, and it survives restarts: unfinished jobs are picked up again when the app starts.</p></div>
+      <div class="card"><h5>Multiple AI keys</h5><p>Up to five (or more) Gemini API keys can be configured. Each adds a marking worker. If one key hits its quota, work moves to another key automatically.</p></div>
+      <div class="card"><h5>Automatic retries</h5><p>When the AI service is busy or the network drops, jobs retry with growing, randomised waits. Invalid keys are set aside rather than failing students.</p></div>
+      <div class="card"><h5>Clear failures</h5><p>A script that can't be marked is shown as <span class="chip bad">Failed</span> with a plain-language reason, and a whole session's failures can be retried in one click.</p></div>
+    </div>
+
+    <h4>Review, reporting and export</h4>
+    <div class="grid-2">
+      <div class="card"><h5>Results browser</h5><p>All sessions in one place, with search, filters by term, class and subject, and tabs for Needs attention, In progress and Complete.</p></div>
+      <div class="card"><h5>Teacher override</h5><p>Correct a student's name, ID or final mark. The AI's original mark is always kept on record, and a teacher's mark is never overwritten by the AI.</p></div>
+      <div class="card"><h5>Student and class reports</h5><p>Printable A4 student reports (marks by stage, percentage, comments) and a class report with mean, mode, lowest, highest and a score distribution chart.</p></div>
+      <div class="card"><h5>Spreadsheet export</h5><p>Download the class list as Excel (.xlsx) or OpenDocument (.ods), choosing which columns to include, including AI mark vs teacher mark and marks per stage.</p></div>
+    </div>
+
+    <h4>Administration</h4>
+    <div class="grid-2">
+      <div class="card"><h5>Teacher accounts</h5><p>Every page requires sign-in. Accounts are created from the command line with hashed passwords, and sign-in attempts are rate-limited.</p></div>
+      <div class="card"><h5>Backups</h5><p>One command zips all scripts, results, accounts and settings, keeping the newest 7 backups. It can be scheduled daily.</p></div>
+      <div class="card"><h5>Automatic clean-up</h5><p>Optional: delete answer-script photos 48 hours after upload to save disk space and limit how long student work is kept. Marks and feedback are kept.</p></div>
+      <div class="card"><h5>Benchmark tool</h5><p>Re-marks a fixed set of students several times to measure consistency, and gives a pass/fail accuracy gate before any AI setting is changed.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="principles">
+    <h3>4. Design principles</h3>
+    <ul>
+      <li><strong>The teacher has the final say.</strong> The AI proposes; the teacher reviews and can override any result. Overrides are permanent and the AI's original mark is kept alongside for accountability.</li>
+      <li><strong>The system, not the AI, does the maths.</strong> The AI never adds up totals or computes percentages. It only reports marks per stage.</li>
+      <li><strong>Marked against your scheme.</strong> The AI marks against the school's own question paper and marking scheme, which are sent with every script. No result is cached or reused; every marking is fresh.</li>
+      <li><strong>Flag, don't hide.</strong> Anything that looks wrong is marked <em>Needs review</em>, with the reason stated. Nothing is silently capped or corrected.</li>
+      <li><strong>Nothing is lost silently.</strong> Re-uploaded pages are moved aside, not deleted. Overwritten sessions are kept as backup folders. Previous marks are kept in a history when a student is re-marked.</li>
+      <li><strong>Works on school infrastructure.</strong> One computer, the school Wi-Fi, ordinary phones. No database server to maintain; data is stored as plain files.</li>
+    </ul>
+  </section>
+
+  <section class="sec" id="who">
+    <h3>5. Who uses it</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Role</th><th>What they do in ExamManager</th></tr></thead>
+      <tbody>
+        <tr><td>Teacher</td><td>Sets up exams, captures or uploads scripts, reviews and corrects results, prints reports, downloads class spreadsheets.</td></tr>
+        <tr><td>Head of department / Director of studies</td><td>Browses results across classes and subjects, reads class statistics, checks flagged results before they're shared.</td></tr>
+        <tr><td>Administrator (IT or designated staff)</td><td>Installs and starts the app, adds AI keys, creates teacher accounts, runs backups, enables clean-up, runs the benchmark before changing AI settings.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted">In the app itself every signed-in user has the same teacher permissions. Administrative tasks are done on the host computer, not from the browser.</p>
+  </section>
+
+  <section class="sec" id="limits">
+    <h3>6. Limits and requirements</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Item</th><th>Requirement or limit</th></tr></thead>
+      <tbody>
+        <tr><td>Host computer</td><td>Windows, macOS or Linux with Python 3.11 or newer (tested on 3.12 and 3.14). Needs internet access to reach the Google Gemini API.</td></tr>
+        <tr><td>Teachers' devices</td><td>Any modern browser on the same network. Camera capture needs a device with a camera and permission to use it.</td></tr>
+        <tr><td>AI service</td><td>At least one Google Gemini API key. Each key should come from a <strong>different Google Cloud project</strong>, because quota is counted per project.</td></tr>
+        <tr><td>File types</td><td>JPG, JPEG, PNG, WEBP and PDF.</td></tr>
+        <tr><td>Batch upload size</td><td>ZIP up to 500 MB uncompressed. Batches over 1,000 pages ask for extra confirmation.</td></tr>
+        <tr><td>Total marks</td><td>Greater than 0, up to 10,000. Default is 100.</td></tr>
+        <tr><td>Student IDs</td><td>Letters, numbers, spaces, dots, dashes and underscores, up to 64 characters.</td></tr>
+        <tr><td>Marking time</td><td>Usually under a minute per script. Several scripts are marked at once (one per key by default).</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout warn"><strong>AI marking is an assistant, not a replacement.</strong><p>Handwriting that is hard to read, diagrams, and open-ended answers can be marked imperfectly. Teachers should review flagged results and spot-check others before results are shared with students or parents.</p></div>
+  </section>
+</div>
+
+<!-- ═════════════════════════ PART 2 ═════════════════════════ -->
+<div class="part" id="part2">
+  <div class="part-head"><span class="part-num">Part 2</span><h2>Product guide: how every feature works and how to use it</h2></div>
+  <p class="part-intro">Sections 7–9 are for the administrator setting the system up. Sections 10–21 are for teachers using it day to day. Sections 22–27 are reference material for administrators.</p>
+
+  <section class="sec" id="install">
+    <h3>7. Installing and starting ExamManager (administrator)</h3>
+    <ol class="steps">
+      <li><strong>Install Python 3.11+</strong> on the computer that will host the app, then open a terminal in the project folder.</li>
+      <li><strong>Create a virtual environment and install dependencies:</strong>
+<pre><code>python -m venv .venv
+# Windows:      .venv\Scripts\activate
+# macOS/Linux:  source .venv/bin/activate
+pip install -r requirements.txt</code></pre></li>
+      <li><strong>Create the <code>.env</code> file.</strong> Copy <code>.env.example</code> to <code>.env</code>, then:
+        <ul>
+          <li>Set <code>SECRET_KEY</code> to a long random value. Generate one with <code>python -c "import secrets; print(secrets.token_hex(32))"</code>.</li>
+          <li>Paste your Gemini API keys into <code>GEMINI_API_KEY_1</code> … <code>GEMINI_API_KEY_5</code>. Blank slots are ignored.</li>
+        </ul>
+      </li>
+      <li><strong>Create at least one teacher account</strong> (see <a href="#accounts">section 8</a>).</li>
+      <li><strong>Start the app:</strong>
+<pre><code>python app.py</code></pre>
+        The console prints the addresses to use, for example:
+<pre><code>🌐 ExamManager running on http://localhost:5000
+   On other devices on this network: http://192.168.1.20:5000</code></pre></li>
+      <li><strong>Open it from another device.</strong> On a phone or laptop connected to the same Wi-Fi, open the <code>http://192.168.x.x:5000</code> address. If it doesn't load, allow Python through the host's firewall on port 5000 (on Windows, choose <em>Private networks</em> when asked).</li>
+    </ol>
+    <h4>What happens at start-up</h4>
+    <ul>
+      <li>Warnings are printed if <code>SECRET_KEY</code> is not set, if there are no teacher accounts, or if no Gemini keys are configured (marking is disabled without keys).</li>
+      <li>Unconfirmed batch uploads older than 24 hours are removed.</li>
+      <li>If automatic clean-up is on, old script photos are deleted (see <a href="#settings">section 21</a>).</li>
+      <li>Marking jobs that were waiting or running when the app last stopped are put back in the queue.</li>
+      <li>The server starts (waitress, one process, 8 threads by default).</li>
+    </ul>
+    <div class="callout"><strong>Keep the host running</strong><p>Marking happens on the host computer. If it sleeps or shuts down, marking pauses and resumes when the app is started again. Set the host's power settings so it doesn't sleep during marking.</p></div>
+  </section>
+
+  <section class="sec" id="accounts">
+    <h3>8. Managing teacher accounts (administrator)</h3>
+    <p>Accounts are managed from a terminal on the host, in the project folder. Passwords are typed at a hidden prompt (at least 8 characters) and stored only as salted hashes in <code>users.json</code>. Changes take effect immediately; no restart is needed.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Task</th><th>Command</th></tr></thead>
+      <tbody>
+        <tr><td>Add a teacher (or reset their password)</td><td><code>python manage_users.py add nakato --name "Mrs Nakato"</code></td></tr>
+        <tr><td>Change a password</td><td><code>python manage_users.py passwd nakato</code></td></tr>
+        <tr><td>Remove a teacher</td><td><code>python manage_users.py remove nakato</code></td></tr>
+        <tr><td>List all teachers</td><td><code>python manage_users.py list</code></td></tr>
+      </tbody>
+    </table></div>
+    <p>The display name is shown in the sidebar and used in the Overview greeting. Teachers who forget their password should ask the administrator to run <code>passwd</code> for them.</p>
+  </section>
+
+  <section class="sec" id="signin">
+    <h3>9. Signing in and finding your way around</h3>
+    <p>Open the address the administrator gave you and sign in with your username and password. Sign-ins last 12 hours. After 8 wrong attempts from the same device within 5 minutes, sign-in is blocked for a few minutes.</p>
+    <p>If your sign-in expires while you are working, the app tells you to refresh the page and sign in again. You return to where you were.</p>
+    <h4>The sidebar</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Item</th><th>What it's for</th></tr></thead>
+      <tbody>
+        <tr><td>Overview</td><td>Home dashboard: totals, recent sessions, the marking queue and results needing attention.</td></tr>
+        <tr><td>Mark an exam</td><td>Starts a new marking session (exam setup).</td></tr>
+        <tr><td>Results</td><td>Every session and student result, with reports and exports.</td></tr>
+        <tr><td>Current session card</td><td>Appears while you're working on an exam. Shows its subject, class and term, with an <em>Add scripts</em> link to go back to uploading.</td></tr>
+        <tr><td>Settings</td><td>Appearance, automatic clean-up, and read-only system information.</td></tr>
+        <tr><td>Help</td><td>A short in-app guide, the meaning of result labels, and common questions.</td></tr>
+        <tr><td>Dark mode / Sign out</td><td>Switch theme (remembered on this device) and sign out.</td></tr>
+      </tbody>
+    </table></div>
+    <p>On a phone, the sidebar is hidden behind the menu button (☰) in the top-left corner.</p>
+  </section>
+
+  <section class="sec" id="overview-page">
+    <h3>10. The Overview page</h3>
+    <p>The Overview is the first page after signing in. It updates itself every 5 seconds while marking is running, and every 20 seconds when idle.</p>
+    <ul>
+      <li><strong>Summary tiles:</strong> <em>Exam sessions</em> (and how many are set up but still awaiting scripts), <em>Scripts marked</em> out of uploaded, <em>Average score</em> across marked scripts, and <em>Needs attention</em> (results to review plus failed scripts).</li>
+      <li><strong>Recent sessions:</strong> the latest 8 exams with progress ("12 of 40 marked"), average and status. Click a row to open it in Results.</li>
+      <li><strong>Marking queue:</strong> how many scripts are being marked, waiting and failed; the students currently being marked (with retry counts); how many scripts can be marked at once; and how many AI keys are resting after hitting a limit. If no keys are configured it says so.</li>
+      <li><strong>Needs attention:</strong> sessions with results to check before sharing.</li>
+      <li><strong>New marking session</strong> button to start setting up an exam.</li>
+    </ul>
+    <p>On a brand-new installation the Overview shows a three-step getting-started panel instead.</p>
+  </section>
+
+  <section class="sec" id="setup">
+    <h3>11. Setting up an exam (Step 1 of 2)</h3>
+    <p>Choose <strong>Mark an exam</strong> in the sidebar or <strong>New marking session</strong> on the Overview. A summary panel beside the form shows what you've filled in and a checklist of what's still missing.</p>
+    <h4>Exam details (all required)</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Field</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Year</td><td>For example 2026.</td></tr>
+        <tr><td>Term</td><td>Term 1, Term 2 or Term 3.</td></tr>
+        <tr><td>Class</td><td>S1–S6 or P1–P8.</td></tr>
+        <tr><td>Stream</td><td>Free text, for example A, B or East.</td></tr>
+        <tr><td>Subject</td><td>Chosen from the built-in list of 38 subjects.</td></tr>
+        <tr><td>Exam name</td><td>Free text, for example Mid-term, End of term, Mock.</td></tr>
+        <tr><td>Total marks</td><td>The most marks a student can get on this paper. Used by the system to turn raw marks into a percentage.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Stream, subject and exam name can't contain <code>/</code> or <code>\</code>.</p>
+
+    <h4>Question paper and marking scheme</h4>
+    <p>For each, choose <strong>Upload files</strong> (choose or drag in PDFs or photos) or <strong>Camera</strong> (photograph each page in the browser; pick a camera if the device has more than one). Add pages <strong>in order</strong>. The file list shows each page with its number and whether it came from the camera or a file; you can remove any page.</p>
+    <ul>
+      <li><strong>Question paper:</strong> every page of the paper the students sat.</li>
+      <li><strong>Marking scheme:</strong> the official marking guide with marks for each question. Use the clearest copy available; the AI scores each question against it, so a legible scheme gives more consistent marks.</li>
+      <li><strong>Extra marking notes (optional):</strong> typed guidance given to the AI with the scheme for every student, for example <em>"accept equivalent units; ignore spelling in Section B"</em>.</li>
+    </ul>
+    <p>Press <strong>Save and continue</strong>.</p>
+
+    <h4>After saving: the total-marks check</h4>
+    <p>If the marking scheme is a text PDF or you typed notes containing mark allocations like <code>(5 marks)</code>, <code>[3 marks]</code> or <code>Total: 50 marks</code>, the system adds them up. If they clearly disagree with the total you entered, a <strong>Check the total marks</strong> dialog appears with the suggested total. Choose <strong>Go back and edit</strong> to correct it, or <strong>Keep and continue</strong>. Photographed schemes can't be read this way and skip the check.</p>
+
+    <h4>If the exam already exists</h4>
+    <p>An exam is identified by year + term + class + stream + subject + exam name. If one with the same details already has students, a <strong>This exam is already set up</strong> dialog appears:</p>
+    <ul>
+      <li><strong>Keep existing</strong> cancels. To add students to the existing exam, go to Results and use <a href="#add-more">Add students</a> instead.</li>
+      <li><strong>Replace it</strong> starts a new, empty session. The old one is not deleted; it's kept on the server as a backup folder and no longer appears in Results.</li>
+    </ul>
+    <p>Re-running setup on an exam replaces its question paper and/or scheme only when new ones are provided, so stale pages from a longer old paper are never left behind.</p>
+    <p>Next you are asked <strong>How will you add the scripts?</strong>: one student at a time, or a whole class from a ZIP. You can switch between them at any time in the session.</p>
+  </section>
+
+  <section class="sec" id="individual">
+    <h3>12. Adding scripts one student at a time</h3>
+    <p>Best for phones and tablets, and for capturing scripts as they're handed in.</p>
+    <ol class="steps">
+      <li><strong>Enter the Student ID and Full name.</strong> Both are required.</li>
+      <li><strong>Add the answer pages in order</strong>, using either:
+        <ul>
+          <li><strong>Camera:</strong> point at the page and tap capture. Each photo is added as the next page. Pick a different camera if needed.</li>
+          <li><strong>Upload files:</strong> choose or drag in photos or a PDF. Select several at once, in page order.</li>
+        </ul>
+      </li>
+      <li><strong>Check the page gallery.</strong> Each page is checked for sharpness and brightness as soon as it's added. Pages that need retaking are highlighted, and the counter says how many. Remove and retake them.</li>
+      <li><strong>Press Upload and mark.</strong> The pages are checked again on the server. If any page is too blurry, too dark or washed out, nothing is saved and you're told which pages to retake. Otherwise the student is saved and joins the marking queue, and the form clears for the next student.</li>
+    </ol>
+    <div class="callout ok"><strong>Tips for good photos</strong><ul>
+      <li>Lay the page flat, in good even light, with the whole page in view.</li>
+      <li>Avoid shadows from your hand or phone, and glare from overhead lights.</li>
+      <li>Hold steady; tap to focus before capturing.</li>
+    </ul></div>
+    <h4>Re-uploading and ID rules</h4>
+    <ul>
+      <li>Uploading again with the <strong>same ID and same name</strong> replaces that student's pages and re-marks them. The old pages are moved aside to a <code>previous_uploads</code> folder, never deleted.</li>
+      <li>If the ID already belongs to a <strong>different name</strong> in this exam, the upload is refused, to avoid overwriting another student's work. Check the ID.</li>
+      <li>If a teacher has already set a final mark for this student, the new pages are saved but the AI does not re-mark them.</li>
+      <li>If the student is still waiting in the queue, the waiting job is updated rather than duplicated.</li>
+    </ul>
+    <h4>The queue panel on this page</h4>
+    <p>Beside the form, a panel lists the students you've uploaded in this exam with their live status and overall progress. From here you can <strong>Pause marking</strong> / resume, go to <strong>See results</strong>, or <strong>Finish this exam</strong> (which closes the current session in your browser; marking still continues). If the connection drops, the panel says so; marking continues on the server and the list catches up when you're back online.</p>
+  </section>
+
+  <section class="sec" id="batch">
+    <h3>13. Uploading a whole class (ZIP or folder)</h3>
+    <p>Best for scripts that have already been scanned, for example on a school photocopier.</p>
+    <h4>Arrange the files</h4>
+    <p>Put each student's pages in their own folder named with the <strong>student ID, then their name</strong>. The ID and name can be separated by an underscore, dash or space.</p>
+    <div class="tree">S2B_Physics/
+├── 001_John Doe/
+│   ├── page1.jpg
+│   └── page2.jpg
+├── 002_Mary Akello/
+│   └── script.pdf
+└── 003_Peter Ouma/
+    └── p1.jpg</div>
+    <ul>
+      <li>Pages can be JPG, PNG, WEBP or PDF and are read in <strong>number order</strong> (page2 comes before page10).</li>
+      <li>One wrapping folder around everything (like <code>S2B_Physics/</code> above) is fine; it's stripped automatically.</li>
+      <li>A folder with only an ID (e.g. <code>005</code>) is accepted, but the student is flagged because the name is missing.</li>
+      <li>Files outside a student folder, nested ZIP/RAR files, unsupported file types and system files (<code>.DS_Store</code>, <code>Thumbs.db</code>, <code>__MACOSX</code>) are skipped with a note.</li>
+    </ul>
+    <h4>Upload</h4>
+    <ol class="steps">
+      <li>Choose <strong>ZIP file</strong> and pick or drag in the ZIP (up to 500 MB), <em>or</em> choose <strong>Folder</strong> and pick the class folder; the browser packages it into a ZIP for you.</li>
+      <li>Press <strong>Check files</strong>. The system reads each student's folder and checks photo quality. Large classes can take a minute.</li>
+    </ol>
+    <h4>Review before marking</h4>
+    <p>Nothing is marked until you confirm. The review screen shows totals (students, pages, ready with no issues), an overall banner, and a table of every student:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Status</th><th>Meaning</th><th>What happens on Start marking</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip ok">Ready</span></td><td>Read cleanly.</td><td>Added and marked.</td></tr>
+        <tr><td><span class="chip warn">Check</span></td><td>Added, but something needs a look: name missing, a page looks blurry, or the same ID appeared in two folders (pages combined).</td><td>Added and marked. Blurry pages may be under-marked.</td></tr>
+        <tr><td><span class="chip bad">Skipped</span></td><td>No valid, readable pages were found.</td><td>Not added.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Open <strong>Show details</strong> to see every warning. Batches over 1,000 pages need an extra tick to confirm. Then press <strong>Start marking</strong>, or <strong>Choose other files</strong> to start over (the uploaded batch is discarded).</p>
+    <p>The whole batch is blocked if the ZIP is empty, password-protected, would expand beyond 500 MB, looks like a "zip bomb", or contains no identifiable student folders. The message says what to fix.</p>
+    <p>On confirmation, students whose ID already belongs to a different name in this exam are not added, and students with a teacher's final mark keep it. The result message lists both.</p>
+    <div class="callout"><strong>Unlike individual upload, batch upload doesn't block blurry pages.</strong><p>They're flagged so you can decide. If a student's result looks low, check their pages and re-upload that student individually.</p></div>
+  </section>
+
+  <section class="sec" id="queue">
+    <h3>14. The marking queue</h3>
+    <p>Every uploaded student becomes a <em>job</em> in a single queue shared by everyone using the app. Workers take jobs in order and mark them in parallel: one worker per AI key by default (more if the administrator sets <code>MARKING_WORKERS_PER_KEY</code>).</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Job state</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Waiting</td><td>In the queue, not started yet.</td></tr>
+        <tr><td>Marking</td><td>A worker is marking it now.</td></tr>
+        <tr><td>Retrying</td><td>The AI service was busy or unreachable; it's waiting and will try again automatically (10 s, 20 s, 40 s … up to 2 minutes apart).</td></tr>
+        <tr><td>Completed</td><td>Result saved.</td></tr>
+        <tr><td>Failed</td><td>Couldn't be marked; a reason is saved on the student.</td></tr>
+        <tr><td>Cancelled</td><td>Removed from the queue before marking started.</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li><strong>Pause / resume:</strong> pausing stops new jobs from starting; jobs already being marked finish.</li>
+      <li><strong>Close the browser freely:</strong> marking runs on the host, not in your browser.</li>
+      <li><strong>Restarts are safe:</strong> waiting and running jobs are saved to disk and resumed when the app starts again.</li>
+      <li><strong>AI quota:</strong> if a key hits its limit it rests (for as long as Google asks, or an hour for a daily limit) and work moves to another key. If every key is out for more than 15 minutes, jobs fail with <em>"Daily AI limit reached"</em>. Use <strong>Retry failed</strong> later.</li>
+    </ul>
+  </section>
+
+  <section class="sec" id="how-marking">
+    <h3>15. How a script is marked</h3>
+    <p>Understanding this helps teachers judge when to trust a result and when to check it.</p>
+    <ol class="steps">
+      <li><strong>Inputs are assembled.</strong> The question paper, marking scheme, any extra notes and the student's pages are sent to the AI, each clearly labelled (for example "QUESTION PAPER — part 1 of 2", "STUDENT ANSWER SCRIPT"). Large submissions are uploaded through Google's file service automatically. Nothing is compressed in a way that could make handwriting harder to read.</li>
+      <li><strong>The AI reads the paper and the whole scheme first.</strong> It notes the exam instructions (compulsory questions, "answer any three from Section B", etc.) and builds an ordered list of every scoring stage, such as Q1(a), Q1(b), Section B Q3, with each stage's maximum.</li>
+      <li><strong>It marks every attempted stage in order.</strong> Stages the student didn't attempt are left out entirely (not given zero). Each attempted stage gets marks up to its own maximum, with partial credit where the scheme allows, and equivalent wording accepted.</li>
+      <li><strong>It returns a plain list of numbers</strong> (<code>SCORES: 4, 2, 5, 3</code>) and a 220–280 word examiner's report. It never states a total or percentage.</li>
+      <li><strong>ExamManager does the arithmetic.</strong> Percentage = sum of stage marks ÷ total marks for the paper × 100.</li>
+      <li><strong>ExamManager checks the result</strong> and marks it <span class="chip warn">Needs review</span> if: some stage scores couldn't be read; a stage score is negative; a single stage is larger than the whole paper; the stages add up to more than the paper total; or the report was cut off. The score is saved as-is (never silently capped) with the reason, so a teacher decides.</li>
+      <li><strong>Everything is recorded.</strong> Every AI reply is saved per student in an <code>ai_runs</code> folder with the model used and timing. If a student is re-marked, the previous mark is kept in a history.</li>
+    </ol>
+    <p>If every page is blank or unreadable, the AI says so and the student is marked <span class="chip bad">Failed</span> with "Pages unreadable or blank — re-capture and upload again".</p>
+  </section>
+
+  <section class="sec" id="results">
+    <h3>16. The Results page</h3>
+    <p>Results lists every exam session, newest first. Use the ↻ button in the top bar to reload.</p>
+    <h4>Finding a session</h4>
+    <ul>
+      <li><strong>Search</strong> by subject, class or student name.</li>
+      <li><strong>Filter</strong> by term, class and subject; <em>Clear filters</em> resets them.</li>
+      <li><strong>Tabs:</strong> All · Needs attention (sessions with results to review or failures) · In progress (not everyone marked yet) · Complete. Each tab shows a count.</li>
+      <li>Long lists show more with <em>Show more sessions</em>.</li>
+    </ul>
+    <h4>Inside a session</h4>
+    <p>Click a session to expand its student list. Columns can be sorted by clicking their headings. Each student row shows ID, name, pages, score and status, with <strong>Report</strong> and <strong>Edit</strong> buttons. Edited marks show a ✎ pencil; hover it to see the AI's original mark.</p>
+    <h4>Result labels</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Label</th><th>Meaning</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip ok">Marked</span></td><td>Marked by the AI with no problems found.</td><td>Spot-check as usual.</td></tr>
+        <tr><td><span class="chip warn">Needs review</span></td><td>Marked, but something looked wrong. The reason is shown.</td><td>Check the script and set the correct mark with Edit before sharing.</td></tr>
+        <tr><td><span class="chip bad">Failed</span></td><td>Couldn't be marked. The reason is shown next to the student.</td><td>Fix the cause, then use Retry failed.</td></tr>
+        <tr><td><span class="chip">Waiting</span></td><td>Uploaded and waiting in the queue.</td><td>Nothing; it will be marked.</td></tr>
+        <tr><td><span class="chip info">Edited</span></td><td>A teacher changed the mark. The AI's mark is kept on record.</td><td>Nothing.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Scores are coloured by band: <strong style="color:var(--ok)">70% and above</strong>, <strong style="color:var(--warn)">50–69%</strong>, <strong style="color:var(--bad)">below 50%</strong>.</p>
+    <h4>Session actions</h4>
+    <ul>
+      <li><strong>Retry failed</strong> (shown when a session has failures): re-queues every failed student in that session who still has pages and hasn't been given a teacher's mark.</li>
+      <li><strong>⋯ menu:</strong> Download spreadsheet · Class report and statistics · Print all student reports · Add students.</li>
+    </ul>
+  </section>
+
+  <section class="sec" id="edit">
+    <h3>17. Changing a mark, name or ID (teacher override)</h3>
+    <ol class="steps">
+      <li>In Results, open the session and press <strong>Edit</strong> on the student's row.</li>
+      <li>Change the name, ID and/or mark. The mark is entered as a <strong>percentage (0–100)</strong>.</li>
+      <li>Press <strong>Save</strong> and confirm in the <em>Change this mark?</em> dialog.</li>
+    </ol>
+    <ul>
+      <li>Your mark becomes the final mark everywhere: student report, class report and spreadsheet.</li>
+      <li>The AI's original mark, name and ID are kept permanently, even after several edits. The student report notes "Mark set by a teacher. The AI's original mark was …%".</li>
+      <li>A <em>Needs review</em> result becomes <em>Marked</em> once a teacher sets the mark.</li>
+      <li>A student with a teacher's mark is <strong>never re-marked by the AI</strong>, even if pages are re-uploaded or a marking job finishes afterwards.</li>
+      <li>Changing the ID doesn't move the student's files; re-marking still finds their pages. An ID already used by another student in the session is refused.</li>
+      <li>Who made the change and when is recorded.</li>
+    </ul>
+  </section>
+
+  <section class="sec" id="reports">
+    <h3>18. Reports and printing</h3>
+    <h4>Student report</h4>
+    <p>Press <strong>Report</strong> on a student row. The examiner's report shows the student's name, ID, subject, exam and term; <strong>marks obtained / total</strong> and the <strong>percentage</strong>; <strong>marks by stage</strong>; the <strong>examiner's comments</strong>; strengths and areas to improve where recorded; and a note if a teacher set the mark. Failed or flagged students carry a clear banner saying the report is not a final result. Press <strong>Print</strong> for an A4 layout (use "Save as PDF" in the print dialog to get a PDF).</p>
+    <h4>Class report and statistics</h4>
+    <p>From the session's ⋯ menu choose <strong>Class report and statistics</strong>. It contains:</p>
+    <ul>
+      <li>A <strong>summary</strong>: number marked, average, and how many scored 70%+, 50–69% and below 50%, with a list of results flagged Needs review.</li>
+      <li><strong>Statistics:</strong> mean, mode, lowest, highest, students and marked. Unmarked students are left out and the report says how many.</li>
+      <li><strong>Check before sharing:</strong> each flagged student with the reason.</li>
+      <li>A <strong>score distribution</strong> chart in five bands (0–19%, 20–39%, 40–59%, 60–79%, 80–100%).</li>
+    </ul>
+    <p>These figures are plain arithmetic over the saved scores. No AI is involved. Press <strong>Print</strong> to print it.</p>
+    <h4>Print all student reports</h4>
+    <p>From the ⋯ menu choose <strong>Print all student reports</strong> to print every student's report in the session in one go, one per page.</p>
+  </section>
+
+  <section class="sec" id="export">
+    <h3>19. Downloading the class spreadsheet</h3>
+    <p>From the session's ⋯ menu choose <strong>Download spreadsheet</strong>. Tick the columns you want, choose the file type, and press <strong>Download</strong>.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Column</th><th>Default</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td>Student ID</td><td>On</td><td>The student's ID.</td></tr>
+        <tr><td>Student name</td><td>On</td><td>The student's name.</td></tr>
+        <tr><td>Total score (%)</td><td>On</td><td>The final mark (teacher's mark if edited).</td></tr>
+        <tr><td>Feedback</td><td>On</td><td>The examiner's report text.</td></tr>
+        <tr><td>Status</td><td>On</td><td>Marked, Needs review, Failed, etc.</td></tr>
+        <tr><td>AI score (%)</td><td>Off</td><td>The AI's original mark.</td></tr>
+        <tr><td>Teacher's mark (%)</td><td>Off</td><td>The teacher's override, if any.</td></tr>
+        <tr><td>Difference</td><td>Off</td><td>Teacher's mark minus AI mark.</td></tr>
+        <tr><td>Edited by teacher</td><td>Off</td><td>Whether the mark was overridden.</td></tr>
+        <tr><td>Marks per stage</td><td>Off</td><td>One column per marking stage.</td></tr>
+      </tbody>
+    </table></div>
+    <p>File types: <strong>Excel (.xlsx)</strong> or <strong>OpenDocument (.ods)</strong> for LibreOffice. The page count is always included. Students are sorted by ID the way a person reads them (S2 before S10).</p>
+  </section>
+
+  <section class="sec" id="add-more">
+    <h3>20. Adding students to an exam later</h3>
+    <p>If some scripts arrive after the rest, or you finished a session early:</p>
+    <ol class="steps">
+      <li>Go to <strong>Results</strong> and find the session.</li>
+      <li>Open its ⋯ menu and choose <strong>Add students</strong>.</li>
+      <li>Pick <strong>One student at a time</strong> or <strong>Whole class from a ZIP file</strong>.</li>
+    </ol>
+    <p>The session becomes your current session again. You don't need to re-upload the question paper or marking scheme; they're read from the session's folder for every new student.</p>
+  </section>
+
+  <section class="sec" id="settings">
+    <h3>21. Settings and automatic clean-up</h3>
+    <h4>Appearance</h4>
+    <p>Light or dark theme. Saved on this device only.</p>
+    <h4>Automatic clean-up</h4>
+    <p>When turned on, answer-script photos (student page folders) older than <strong>48 hours</strong> after upload are <strong>permanently deleted each time ExamManager starts</strong>. Marks, feedback and exported spreadsheets are kept; only the page photos go, so those students <strong>can't be re-marked</strong> afterwards.</p>
+    <ul>
+      <li>Turning it on requires confirming a warning dialog (<em>Turn on clean-up</em> / <em>Keep it off</em>).</li>
+      <li><strong>Scripts that would be deleted now</strong> previews how many folders and MB are past the limit.</li>
+      <li><strong>Deletion history</strong> lists the last 50 deletions: student, session, time and size.</li>
+    </ul>
+    <div class="callout warn"><strong>Before turning clean-up on</strong><p>Make sure scripts are reviewed and any re-marking is done within 48 hours of upload, and that backups are running if you need to keep the photos.</p></div>
+    <h4>System (read-only)</h4>
+    <p>Shows the AI model in use (and fallback model, if set), how many AI keys are configured and how many are resting, and how many scripts can be marked at once. These are changed by the administrator in <code>.env</code>.</p>
+  </section>
+
+  <section class="sec" id="admin">
+    <h3>22. Administration tasks</h3>
+    <h4>Backups</h4>
+<pre><code>python tools/backup.py            # keeps the newest 7
+python tools/backup.py --keep 14  # keep 14 instead</code></pre>
+    <p>Creates <code>backups/exammanager-backup-YYYYMMDD-HHMMSS.zip</code> containing <code>uploads/</code> (all sessions, scripts and results), <code>users.json</code>, <code>settings.json</code>, <code>deletion_log.json</code> and <code>pending_jobs.json</code>. Photos are stored byte-for-byte. Unconfirmed batch uploads are skipped.</p>
+    <p><strong>Schedule it daily.</strong> On Windows, create a Task Scheduler task that runs <code>.venv\Scripts\python.exe tools\backup.py</code> with the project folder as <em>Start in</em>. On macOS/Linux, add a cron entry. Copy backups off the host computer regularly.</p>
+    <p><strong>To restore</strong>, stop the app, unzip a backup into the project folder (replacing <code>uploads/</code> and the JSON files), and start the app again.</p>
+
+    <h4>Adding AI capacity</h4>
+    <ul>
+      <li>Add keys to <code>GEMINI_API_KEY_1</code> … <code>_5</code> in <code>.env</code> and restart. Each key from a <strong>separate Google Cloud project</strong> adds one marking worker. Several keys from one project share one limit and add no speed. (More slots, or a comma-separated <code>GEMINI_API_KEYS</code>, are also accepted.)</li>
+      <li>Paid-tier keys with high rate limits: set <code>MARKING_WORKERS_PER_KEY=2</code> (or more) to mark several scripts per key at once.</li>
+      <li>An invalid or expired key is set aside for 6 hours and logged by slot number; replace it in <code>.env</code>.</li>
+    </ul>
+
+    <h4>Running the benchmark (before changing AI settings)</h4>
+    <p>The benchmark re-marks a fixed set of students several times with the real marker and measures consistency. It never changes any session.</p>
+<pre><code>copy tools\benchmark_set.example.csv benchmark_set.csv   # macOS/Linux: cp
+# edit it: one row per student — session folder, student ID, optional teacher mark
+python tools/benchmark.py --set benchmark_set.csv --label baseline
+# after changing a setting:
+python tools/benchmark.py --set benchmark_set.csv --label after --compare benchmarks/&lt;baseline folder&gt;</code></pre>
+    <p>Results go to <code>benchmarks/&lt;time&gt;_&lt;label&gt;/</code> (<code>results.csv</code>, <code>summary.txt</code>, <code>summary.json</code>, raw AI records). <code>--compare</code> prints <strong>ACCURACY GATE: PASS/FAIL</strong>: the set's average score must not move by more than 2 percentage points, and the round-to-round spread (standard deviation) must not get worse. Only adopt a new model or setting if the gate passes.</p>
+
+    <h4>Monitoring</h4>
+    <ul>
+      <li><code>logs/marking.log</code>: one line per marking job with timings, tokens used, retries and outcome.</li>
+      <li><code>…/student_&lt;id&gt;/ai_runs/*.json</code>: every AI reply for a student.</li>
+      <li>The Overview queue panel and Settings → System show live worker and key status.</li>
+    </ul>
+  </section>
+
+  <section class="sec" id="config">
+    <h3>23. Configuration reference (<code>.env</code>)</h3>
+    <p>Restart the app after changing <code>.env</code>.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Setting</th><th>Default</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>SECRET_KEY</td><td>(must set)</td><td>Secures sign-in sessions. Long random value.</td></tr>
+        <tr><td>GEMINI_API_KEY_1 … _5</td><td>blank</td><td>AI keys. One marking worker per key.</td></tr>
+        <tr><td>GEMINI_MODEL</td><td>gemini-3.6-flash</td><td>Model used for marking. Change only after benchmarking.</td></tr>
+        <tr><td>GEMINI_FALLBACK_MODEL</td><td>blank</td><td>Used only when the main model is overloaded. Blank = never switch.</td></tr>
+        <tr><td>GEMINI_THINKING_LEVEL</td><td>blank</td><td>minimal / low / medium / high. Lower is faster and cheaper. Benchmark first.</td></tr>
+        <tr><td>GEMINI_MAX_OUTPUT_TOKENS</td><td>32768</td><td>Output budget per reply.</td></tr>
+        <tr><td>GEMINI_RETRY_OUTPUT_TOKENS</td><td>65536</td><td>Larger budget used once when a reply comes back cut off.</td></tr>
+        <tr><td>PAGE_EXIF_ROTATE</td><td>0</td><td>1 = rotate phone photos upright before sending to the AI (originals untouched). Benchmark first.</td></tr>
+        <tr><td>PAGE_MAX_EDGE</td><td>0</td><td>Downscale pages larger than this many pixels on the long edge (e.g. 2400). 0 = off. Benchmark first.</td></tr>
+        <tr><td>MARKING_WORKERS_PER_KEY</td><td>1</td><td>Scripts marked at once per key. Keep 1 on free-tier keys.</td></tr>
+        <tr><td>SERVER_THREADS</td><td>8</td><td>Web server threads.</td></tr>
+        <tr><td>HOST / PORT</td><td>0.0.0.0 / 5000</td><td>Network address and port the app listens on.</td></tr>
+        <tr><td>UPLOAD_FOLDER</td><td>uploads/exams</td><td>Where sessions are stored.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec" id="data">
+    <h3>24. Where data is stored</h3>
+    <p>ExamManager uses no database. Everything is plain files in the project folder on the host, written safely (locked, atomic writes) so a crash can't leave a half-written file.</p>
+    <div class="tree">uploads/exams/&lt;year&gt;/&lt;term&gt;/&lt;class&gt;_&lt;stream&gt;/&lt;subject&gt;/&lt;exam&gt;/
+├── students_metadata.json     exam details + every student's result
+├── question_paper_1.pdf …     question paper pages
+├── rubric_1.jpg …             marking scheme pages
+├── rubric_text.txt            extra marking notes (if typed)
+└── student_&lt;id&gt;/
+    ├── page_1.jpg …           answer pages (as uploaded)
+    ├── original.pdf           the uploaded PDF, if any
+    ├── previous_uploads/      pages replaced by a re-upload
+    └── ai_runs/*.json         every AI reply for this student</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>File or folder</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td>users.json</td><td>Teacher accounts (hashed passwords).</td></tr>
+        <tr><td>pending_jobs.json</td><td>Marking jobs not yet finished (resumed on restart).</td></tr>
+        <tr><td>settings.json</td><td>Automatic clean-up setting.</td></tr>
+        <tr><td>deletion_log.json</td><td>Record of clean-up deletions (last 1,000).</td></tr>
+        <tr><td>logs/marking.log</td><td>Marking timings, tokens, retries.</td></tr>
+        <tr><td>backups/</td><td>Backup ZIPs.</td></tr>
+        <tr><td>benchmarks/</td><td>Benchmark results.</td></tr>
+        <tr><td>&lt;exam&gt;_backup_&lt;time&gt;</td><td>A session that was replaced at setup (kept, hidden from Results).</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="sec" id="security">
+    <h3>25. Security and privacy</h3>
+    <ul>
+      <li><strong>Sign-in required</strong> for every page and API. Sessions expire after 12 hours; cookies are HTTP-only. Repeated wrong passwords are rate-limited.</li>
+      <li><strong>Passwords</strong> are stored only as salted hashes and typed at hidden prompts, never on the command line.</li>
+      <li><strong>Secrets</strong> (<code>.env</code>, API keys, <code>users.json</code>) and all student data (<code>uploads/</code>) are excluded from version control. Never commit or share them.</li>
+      <li><strong>Upload safety:</strong> folder names and IDs are validated so they can't point outside the data folder; ZIPs are checked for unsafe paths, encryption, zip bombs and corrupted files before anything is written.</li>
+      <li><strong>Data leaves the school only to the AI service.</strong> Question papers, marking schemes and answer-script images are sent to Google's Gemini API for marking. Student names and IDs appear in the request. Make sure this is acceptable under your school's and country's data-protection rules, and consider the key's Google Cloud terms.</li>
+      <li><strong>Network:</strong> the app is meant for the school's local network and serves plain HTTP. Don't expose port 5000 directly to the internet. If remote access is needed, put it behind a VPN or an HTTPS reverse proxy.</li>
+      <li><strong>Retention:</strong> use automatic clean-up and backup rotation to control how long student scripts are kept.</li>
+    </ul>
+  </section>
+
+  <section class="sec" id="trouble">
+    <h3>26. Troubleshooting</h3>
+    <h4>Failure reasons shown on a student</h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Reason shown</th><th>Cause</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Pages unreadable or blank</td><td>The AI found no answers on the pages.</td><td>Re-capture and upload the student again.</td></tr>
+        <tr><td>No readable pages found</td><td>The student's page files are missing.</td><td>Upload the student's pages again.</td></tr>
+        <tr><td>Question paper or marking scheme missing</td><td>Session materials not found on disk.</td><td>Re-run setup for the exam with the paper and scheme.</td></tr>
+        <tr><td>Daily AI limit reached on every key</td><td>All keys are out of quota.</td><td>Retry failed later, or add keys from other projects.</td></tr>
+        <tr><td>AI service busy / Could not reach the AI service</td><td>Overload or network problem that persisted through retries.</td><td>Check the host's internet, then Retry failed.</td></tr>
+        <tr><td>Report incomplete / AI reply could not be read</td><td>The AI's reply was cut off or in the wrong format.</td><td>Retry failed (re-mark).</td></tr>
+        <tr><td>AI service not set up</td><td>No API keys in <code>.env</code>.</td><td>Administrator adds keys and restarts.</td></tr>
+      </tbody>
+    </table></div>
+    <h4>Common questions</h4>
+    <details class="faq"><summary>Teachers can't open the app from their phones.</summary><div>Make sure the phone is on the same Wi-Fi as the host, use the <code>192.168.x.x</code> address printed at start-up (not <code>localhost</code>), and allow Python through the host's firewall on port 5000. The host's IP address can change after a restart; check the console.</div></details>
+    <details class="faq"><summary>The camera doesn't start.</summary><div>Allow camera access when the browser asks. Some browsers only allow the camera on secure (HTTPS) pages or on <code>localhost</code>; if the camera is blocked on the school network address, use <strong>Upload files</strong> and pick photos taken with the phone's camera app instead.</div></details>
+    <details class="faq"><summary>An upload is rejected as too blurry, but the page looks fine.</summary><div>The check is strict on purpose. Retake in brighter, even light with the phone held steady and parallel to the page. Very pale or very dark photos are also rejected. Scanned PDFs are not blur-checked.</div></details>
+    <details class="faq"><summary>"This exam session is no longer available."</summary><div>The exam's folder was moved, replaced or deleted. Set the exam up again, or pick it from Results and use Add students.</div></details>
+    <details class="faq"><summary>Marking seems stuck.</summary><div>Check the Overview queue panel: it may be paused (resume it), retrying because the AI is busy, or waiting because every key is resting. Check the host is awake and online, and look at <code>logs/marking.log</code>.</div></details>
+    <details class="faq"><summary>The total marks were wrong.</summary><div>Straight after setup, before anyone is marked, choose <em>Go back and edit</em> in the total-marks check. Once students are marked with the old total it can't be changed there; set up the exam again with <em>Replace it</em>, or correct individual marks with Edit.</div></details>
+    <details class="faq"><summary>How do I re-mark a student?</summary><div>Upload their pages again with the same ID and name. Their previous mark is kept in the history. (Students with a teacher's mark are not re-marked.)</div></details>
+    <details class="faq"><summary>Sign-in says "Too many attempts".</summary><div>Wait five minutes and try again. If the password is forgotten, the administrator resets it with <code>python manage_users.py passwd &lt;username&gt;</code>.</div></details>
+  </section>
+
+  <section class="sec" id="glossary">
+    <h3>27. Glossary</h3>
+    <div class="table-wrap"><table>
+      <tbody>
+        <tr><td>Session / exam</td><td>One paper for one class and stream: year + term + class + stream + subject + exam name.</td></tr>
+        <tr><td>Script</td><td>A student's answer pages.</td></tr>
+        <tr><td>Marking scheme / rubric</td><td>The official guide listing what earns marks for each question.</td></tr>
+        <tr><td>Stage</td><td>One independently scored part of the scheme, e.g. Q1(a).</td></tr>
+        <tr><td>Raw marks</td><td>Sum of stage marks, out of the paper's total marks.</td></tr>
+        <tr><td>Score / percentage</td><td>Raw marks ÷ total marks × 100.</td></tr>
+        <tr><td>Override</td><td>A teacher-set final mark that replaces the AI's mark; the AI's mark is kept on record.</td></tr>
+        <tr><td>Queue / job</td><td>The list of scripts waiting to be marked; each script is one job.</td></tr>
+        <tr><td>API key</td><td>A credential for Google's Gemini AI service. Each key adds a marking worker.</td></tr>
+        <tr><td>Batch</td><td>A whole class uploaded at once as a ZIP or folder.</td></tr>
+        <tr><td>Benchmark</td><td>A consistency test used before changing AI settings.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="end">
+    <p>ExamManager project guide. Covers the application as found in the project repository: web app (<code>app.py</code>), AI marker, marking queue, batch processor, account, backup and benchmark tools.</p>
+  </footer>
+</div>
+
+</div>
+</main>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, btn = document.getElementById('themeBtn');
+  try { var t = localStorage.getItem('emguide_theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+  btn.addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') ||
+      (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('emguide_theme', next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
