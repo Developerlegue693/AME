@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% set active = 'mark' %}
+{% block title %}Add scripts{% endblock %}
+{% block topbar_title %}Mark an exam{% endblock %}
+{% block topbar_context %}Step 2 of 2: add students' scripts{% endblock %}
+{% block content_class %}content-narrow{% endblock %}
+
+{% block head %}
+<style>
+  .ready { margin-bottom: var(--s6); }
+  .methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
+  @media (max-width: 720px) { .methods { grid-template-columns: 1fr; } }
+  .method { display: flex; flex-direction: column; gap: var(--s3); padding: var(--s6); color: var(--ink); border: 1.5px solid var(--line); transition: border-color var(--t-fast), background var(--t-fast); }
+  .method:hover { border-color: var(--primary); text-decoration: none; }
+  .method-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--primary-soft); color: var(--primary-text); font-size: 18px; }
+  .method h2 { font-size: 18px; }
+  .method p { color: var(--ink-2); font-size: 14.5px; }
+  .method ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink-2); }
+  .method li i { color: var(--ok); margin-right: 8px; }
+  .method .btn { margin-top: auto; align-self: flex-start; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="callout callout-ok ready">
+  <i class="fa-solid fa-circle-check"></i>
+  <div><strong>{{ exam_data.subject }} ({{ exam_data.exam_type }})</strong> is set up for {{ exam_data.class }} {{ exam_data.stream }}, {{ exam_data.term }} {{ exam_data.year }}, marked out of {{ exam_data.total_marks }}.</div>
+</div>
+
+<div class="page-head">
+  <div>
+    <h1 class="page-title">How will you add the scripts?</h1>
+    <p class="page-sub">You can switch between the two at any time in this session.</p>
+  </div>
+</div>
+
+<div class="methods">
+  <a class="panel method" href="{{ url_for('upload_student') }}">
+    <div class="method-icon"><i class="fa-solid fa-camera"></i></div>
+    <h2>One student at a time</h2>
+    <p>Enter the student's name and ID, then photograph their pages with this device's camera or choose photos and PDFs.</p>
+    <ul>
+      <li><i class="fa-solid fa-check"></i>Works on a phone or tablet</li>
+      <li><i class="fa-solid fa-check"></i>Blurry pages are caught before upload</li>
+    </ul>
+    <span class="btn btn-secondary">Add one by one</span>
+  </a>
+  <a class="panel method" href="{{ url_for('batch_upload_page') }}">
+    <div class="method-icon"><i class="fa-solid fa-file-zipper"></i></div>
+    <h2>Whole class from a ZIP file</h2>
+    <p>Upload one ZIP with a folder for each student, named like <code>001_John Doe</code>. You'll review everything before marking starts.</p>
+    <ul>
+      <li><i class="fa-solid fa-check"></i>Best for scanned scripts</li>
+      <li><i class="fa-solid fa-check"></i>Marks a full class in one step</li>
+    </ul>
+    <span class="btn btn-primary">Upload a ZIP file</span>
+  </a>
+</div>
+{% endblock %}

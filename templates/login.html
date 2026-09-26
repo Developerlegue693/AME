@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in · ExamManager</title>
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("em_theme"); } catch (e) {}
+      if (t !== "light" && t !== "dark") t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}" />
+  <link rel="stylesheet" href="{{ asset('css/icons.css') }}" />
+  <style>
+    body { display: grid; place-items: center; min-height: 100vh; padding: var(--s4); }
+    .signin { width: 100%; max-width: 400px; }
+    .signin .brand { height: auto; padding: 0; border: 0; margin-bottom: var(--s6); justify-content: center; }
+    .signin .brand-mark { width: 36px; height: 36px; }
+    .signin .brand-name { font-size: 20px; }
+    .signin .panel-body { padding: var(--s6); }
+    .signin h1 { font-size: 20px; margin-bottom: 4px; }
+    .signin form > * + * { margin-top: var(--s4); }
+    .signin .btn { margin-top: var(--s5); }
+    .foot { text-align: center; margin-top: var(--s5); font-size: 13.5px; color: var(--ink-3); }
+  </style>
+</head>
+<body>
+  <main class="signin">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="m9 13 2.2 2.2L15.5 11"/></svg>
+      </span>
+      <span class="brand-name">ExamManager</span>
+    </div>
+    <section class="panel">
+      <div class="panel-body">
+        <h1>Sign in</h1>
+        <p class="muted mb-6">Use the teacher account your school set up for you.</p>
+        <form method="post" action="{{ url_for('login') }}">
+          <input type="hidden" name="next" value="{{ next_url }}" />
+          <div class="field">
+            <label class="label" for="username">Username</label>
+            <input class="input" id="username" name="username" autocomplete="username" value="{{ username }}" {% if not username %}autofocus{% endif %} required />
+          </div>
+          <div class="field">
+            <label class="label" for="password">Password</label>
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" {% if username %}autofocus{% endif %} required />
+          </div>
+          {% if error %}
+          <div class="callout callout-bad" role="alert"><i class="fa-solid fa-circle-exclamation"></i><span>{{ error }}</span></div>
+          {% endif %}
+          <button type="submit" class="btn btn-primary btn-lg btn-block">Sign in</button>
+        </form>
+        {% if no_users %}
+        <div class="callout callout-info mt-6"><i class="fa-solid fa-circle-info"></i>
+          <span>No teacher accounts exist yet. On the computer running ExamManager, run <code>python manage_users.py add &lt;username&gt;</code> to create one.</span></div>
+        {% endif %}
+      </div>
+    </section>
+    <p class="foot">Forgot your password? Ask the person who manages ExamManager at your school.</p>
+  </main>
+</body>
+</html>

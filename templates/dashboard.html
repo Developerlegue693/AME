@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% set active = 'overview' %}
+{% block title %}Overview{% endblock %}
+{% block topbar_title %}Overview{% endblock %}
+
+{% block head %}
+<style>
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: var(--s6); }
+  .kpi { padding: var(--s5); min-width: 0; }
+  .kpi + .kpi { border-left: 1px solid var(--line); }
+  .kpi-label { font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: var(--s2); }
+  .kpi-value { font-size: 32px; font-weight: 700; letter-spacing: -.025em; line-height: 1.15; margin-top: var(--s2); font-variant-numeric: tabular-nums; }
+  .kpi-foot { font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+  .kpi.attention .kpi-value { color: var(--warn); }
+  .kpi.clear .kpi-value { color: var(--ok); }
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kpi:nth-child(3) { border-left: 0; } .kpi:nth-child(n+3) { border-top: 1px solid var(--line); } }
+  @media (max-width: 520px) { .kpi { padding: var(--s4); } .kpi-value { font-size: 26px; } }
+
+  .dash-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: var(--s5); align-items: start; }
+  @media (max-width: 1100px) { .dash-grid { grid-template-columns: 1fr; } }
+  .side-col > .panel + .panel { margin-top: var(--s5); }
+
+  .sess-exam { font-weight: 600; color: var(--ink); }
+  .sess-meta { font-size: 13px; color: var(--ink-3); }
+  .sess-progress { min-width: 140px; }
+  .sess-progress .progress { margin-bottom: 5px; }
+  .sess-progress small { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  tr.linkrow { cursor: pointer; }
+  tr.linkrow td:last-child { color: var(--ink-3); width: 32px; }
+  @media (max-width: 720px) { .hide-sm { display: none; } }
+
+  .queue-state { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
+  .queue-counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s4); }
+  .qc { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s3); }
+  .qc-num { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .qc-lbl { font-size: 13px; color: var(--ink-3); }
+  .job-list { margin-top: var(--s4); display: flex; flex-direction: column; }
+  .job { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .job .spinner { color: var(--primary-text); width: 14px; height: 14px; }
+  .job-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .attn-item { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s5); border-top: 1px solid var(--line); color: var(--ink); }
+  .attn-item:first-child { border-top: 0; }
+  .attn-item:hover { background: var(--surface-2); text-decoration: none; }
+  .attn-text { flex: 1; min-width: 0; }
+  .attn-text .sess-exam { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s5); text-align: left; max-width: 820px; margin: var(--s6) auto 0; }
+  .step-n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary-text); font-weight: 700; font-size: 14px; margin-bottom: var(--s2); }
+  .step h3 { font-size: 15px; margin-bottom: 4px; }
+  .step p { font-size: 14px; color: var(--ink-2); }
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title" id="greeting">Overview</h1>
+    <p class="page-sub">Where your marking stands across every exam session.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="{{ url_for('view_students') }}"><i class="fa-solid fa-table-list"></i> Results</a>
+    <a class="btn btn-primary" href="{{ url_for('setup_start') }}"><i class="fa-solid fa-plus"></i> New marking session</a>
+  </div>
+</div>
+
+<section class="panel kpis" aria-label="Summary">
+  <div class="kpi">
+    <div class="kpi-label">Exam sessions</div>
+    <div class="kpi-value" id="kSessions">{{ stats.total_sessions }}</div>
+    <div class="kpi-foot" id="kSessionsFoot">&nbsp;</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Scripts marked</div>
+    <div class="kpi-value" id="kMarked">{{ stats.total_marked }}</div>
+    <div class="kpi-foot" id="kMarkedFoot">of {{ stats.total_students }} uploaded</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Average score</div>
+    <div class="kpi-value" id="kAvg">—</div>
+    <div class="kpi-foot">across marked scripts</div>
+  </div>
+  <div class="kpi" id="kAttnBox">
+    <div class="kpi-label">Needs attention</div>
+    <div class="kpi-value" id="kAttn">—</div>
+    <div class="kpi-foot" id="kAttnFoot">&nbsp;</div>
+  </div>
+</section>
+
+<div id="emptyState" class="panel hidden">
+  <div class="empty">
+    <div class="empty-icon"><i class="fa-solid fa-file-pen"></i></div>
+    <div class="empty-title">No exams marked yet</div>
+    <p class="empty-desc">Set up your first marking session. It takes about two minutes.</p>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><h3>Set up the exam</h3><p>Choose the class and subject, then add the question paper and marking scheme.</p></div>
+      <div class="step"><div class="step-n">2</div><h3>Add scripts</h3><p>Photograph each student's pages, or upload a whole class as one ZIP file.</p></div>
+      <div class="step"><div class="step-n">3</div><h3>Review and export</h3><p>Check flagged results, adjust any mark, and download the class list.</p></div>
+    </div>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('setup_start') }}"><i class="fa-solid fa-plus"></i> Set up a marking session</a>
+  </div>
+</div>
+
+<div class="dash-grid" id="dashGrid">
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2 class="panel-title">Recent sessions</h2>
+        <p class="panel-desc">The latest exams you've worked on</p>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('view_students') }}">All results</a>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr>
+          <th>Exam</th><th>Progress</th><th class="right hide-sm">Average</th><th class="hide-sm">Status</th><th></th>
+        </tr></thead>
+        <tbody id="recentBody">
+          {% for _ in range(4) %}
+          <tr><td><div class="skeleton" style="height:14px;width:60%"></div><div class="skeleton mt-2" style="height:11px;width:40%"></div></td>
+              <td><div class="skeleton" style="height:6px;width:120px"></div></td><td class="hide-sm"></td><td class="hide-sm"></td><td></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="side-col">
+    <section class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title">Marking queue</h2>
+        <span class="chip" id="qState"><span class="dot"></span> Checking…</span>
+      </div>
+      <div class="panel-body">
+        <div class="queue-counts">
+          <div class="qc"><div class="qc-num" id="qMarking">0</div><div class="qc-lbl">Marking</div></div>
+          <div class="qc"><div class="qc-num" id="qWaiting">0</div><div class="qc-lbl">Waiting</div></div>
+          <div class="qc"><div class="qc-num" id="qFailed">0</div><div class="qc-lbl">Failed</div></div>
+        </div>
+        <div class="job-list" id="qJobs"></div>
+        <p class="hint mt-4" id="qKeys"></p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">Needs attention</h2>
+          <p class="panel-desc">Results to check before sharing</p>
+        </div>
+      </div>
+      <div id="attnList"><div class="panel-body muted">Loading…</div></div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var esc = EM.esc;
+  var firstName = {{ ((session.get('user') or {}).get('display_name') or '')|tojson }}.split(' ')[0];
+
+  var h = new Date().getHours();
+  var part = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = firstName ? part + ', ' + firstName : part;
+
+  function pct(n) { return Math.round(n * 10) / 10; }
+  function band(p) { return p >= 70 ? 'score-high' : p >= 50 ? 'score-mid' : 'score-low'; }
+  function meta(s) {
+    return [((s['class'] || '') + ' ' + (s.stream || '')).trim(), ((s.term || '') + ' ' + (s.year || '')).trim()]
+      .filter(Boolean).join(', ');
+  }
+  function resultsLink(sess) { return '/students?session=' + encodeURIComponent(sess.session_id || sess.id); }
+
+  function statusChip(s) {
+    if (s.failed_count) return '<span class="chip chip-bad"><i class="fa-solid fa-circle-exclamation"></i> ' + s.failed_count + ' failed</span>';
+    if (s.review_count) return '<span class="chip chip-warn"><i class="fa-solid fa-flag"></i> ' + s.review_count + ' to review</span>';
+    if (s.total_students && s.marked_count === s.total_students) return '<span class="chip chip-ok"><i class="fa-solid fa-check"></i> Complete</span>';
+    if (!s.total_students) return '<span class="chip">No scripts yet</span>';
+    return '<span class="chip chip-info">In progress</span>';
+  }
+
+  async function loadSessions() {
+    var res;
+    try { res = await fetch('/api/sessions', { credentials: 'same-origin' }); } catch (e) { return; }
+    if (res.status === 401) { location.href = '/login?next=/'; return; }
+    if (!res.ok) return;
+    var data = await res.json();
+    var sessions = (data.sessions || []);
+
+    var withStudents = sessions.filter(function (s) { return (s.total_students || 0) > 0; });
+    var uploaded = 0, marked = 0, scores = [], review = 0, failed = 0;
+    sessions.forEach(function (s) {
+      uploaded += s.total_students || 0;
+      marked += s.marked_count || 0;
+      review += s.review_count || 0;
+      failed += s.failed_count || 0;
+      (s.students || []).forEach(function (st) {
+        if (st.status === 'marked') { var v = parseFloat(st.total_score); if (!isNaN(v)) scores.push(v); }
+      });
+    });
+
+    document.getElementById('kSessions').textContent = withStudents.length;
+    document.getElementById('kSessionsFoot').textContent = sessions.length > withStudents.length
+      ? (sessions.length - withStudents.length) + ' set up, awaiting scripts' : ' ';
+    document.getElementById('kMarked').textContent = marked;
+    document.getElementById('kMarkedFoot').textContent = 'of ' + uploaded + ' uploaded';
+    var avg = scores.length ? pct(scores.reduce(function (a, b) { return a + b; }, 0) / scores.length) : null;
+    var kAvg = document.getElementById('kAvg');
+    kAvg.textContent = avg === null ? '—' : avg + '%';
+    var attn = review + failed;
+    document.getElementById('kAttn').textContent = attn;
+    document.getElementById('kAttnBox').classList.toggle('attention', attn > 0);
+    document.getElementById('kAttnBox').classList.toggle('clear', attn === 0 && marked > 0);
+    document.getElementById('kAttnFoot').textContent = attn
+      ? [review ? review + ' to review' : '', failed ? failed + ' failed' : ''].filter(Boolean).join(', ')
+      : (marked ? 'All results are clear' : ' ');
+
+    if (!sessions.length) {
+      document.getElementById('emptyState').classList.remove('hidden');
+      document.getElementById('dashGrid').classList.add('hidden');
+      return;
+    }
+
+    var named = sessions.filter(function (s) { return s.subject; });
+    document.getElementById('recentBody').innerHTML = named.slice(0, 8).map(function (s) {
+      var tot = s.total_students || 0, mk = s.marked_count || 0;
+      var sc = (s.students || []).filter(function (x) { return x.status === 'marked'; })
+        .map(function (x) { return parseFloat(x.total_score); }).filter(function (v) { return !isNaN(v); });
+      var a = sc.length ? pct(sc.reduce(function (p, c) { return p + c; }, 0) / sc.length) : null;
+      var w = tot ? Math.round(mk / tot * 100) : 0;
+      return '<tr class="linkrow" data-href="' + esc(resultsLink(s)) + '">' +
+        '<td><div class="sess-exam">' + esc(s.subject || 'Exam') + (s.exam_type ? ' (' + esc(s.exam_type) + ')' : '') + '</div>' +
+        '<div class="sess-meta">' + esc(meta(s)) + '</div></td>' +
+        '<td class="sess-progress"><div class="progress' + (tot && mk === tot ? ' ok' : '') + '"><span style="width:' + w + '%"></span></div>' +
+        '<small>' + mk + ' of ' + tot + ' marked</small></td>' +
+        '<td class="right hide-sm">' + (a === null ? '<span class="score score-none">—</span>' : '<span class="score ' + band(a) + '">' + a + '%</span>') + '</td>' +
+        '<td class="hide-sm">' + statusChip(s) + '</td>' +
+        '<td><i class="fa-solid fa-chevron-right"></i></td></tr>';
+    }).join('');
+
+    var needs = sessions.filter(function (s) { return s.review_count || s.failed_count; }).slice(0, 6);
+    document.getElementById('attnList').innerHTML = needs.length ? needs.map(function (s) {
+      return '<a class="attn-item" href="' + esc(resultsLink(s)) + '">' +
+        '<div class="attn-text"><span class="sess-exam">' + esc(s.subject) + ' (' + esc(s.exam_type) + ')' + '</span>' +
+        '<span class="sess-meta">' + esc((s['class'] || '') + ' ' + (s.stream || '')) + '</span></div>' + statusChip(s) + '</a>';
+    }).join('') : '<div class="empty" style="padding:28px 20px"><div class="empty-icon"><i class="fa-solid fa-check"></i></div><div class="empty-title">Nothing to check</div><p class="empty-desc">Flagged and failed results will appear here.</p></div>';
+  }
+
+  document.getElementById('recentBody').addEventListener('click', function (e) {
+    var tr = e.target.closest('tr[data-href]'); if (tr) location.href = tr.getAttribute('data-href');
+  });
+
+  var qTimer = null;
+  async function loadQueue() {
+    var busy = false;
+    try {
+      var res = await fetch('/api/queue/status', { credentials: 'same-origin' });
+      if (res.ok) {
+        var q = await res.json();
+        var cur = q.current_jobs || [], wait = (q.queue || []).length, failed = (q.failed || []).length;
+        busy = cur.length > 0 || wait > 0;
+        document.getElementById('qMarking').textContent = cur.length;
+        document.getElementById('qWaiting').textContent = wait;
+        document.getElementById('qFailed').textContent = failed;
+        var chip = document.getElementById('qState');
+        var map = { processing: ['chip-info', 'dot-info', 'Marking'], retrying: ['chip-warn', 'dot-warn', 'Retrying'],
+                    paused: ['chip-warn', 'dot-warn', 'Paused'], waiting: ['chip-info', 'dot-info', 'Starting'], idle: ['', '', 'Idle'] };
+        var m = map[q.status] || map.idle;
+        chip.className = 'chip ' + m[0];
+        chip.innerHTML = '<span class="dot ' + m[1] + '"></span> ' + m[2];
+        document.getElementById('qJobs').innerHTML = cur.slice(0, 5).map(function (j) {
+          return '<div class="job"><span class="spinner"></span><span class="job-name">' + esc(j.student_name || j.student_id) + '</span>' +
+            (j.retry_count ? '<span class="chip chip-warn">retry ' + j.retry_count + '</span>' : '') + '</div>';
+        }).join('');
+        var k = q.key_pool || {};
+        document.getElementById('qKeys').textContent = k.total_keys
+          ? q.worker_count + ' scripts can be marked at once' + (k.keys_cooling_down ? ' — ' + k.keys_cooling_down + ' of ' + k.total_keys + ' AI keys resting' : '')
+          : 'AI marking is not set up yet. Add a Gemini key to the .env file.';
+      }
+    } catch (e) {}
+    clearTimeout(qTimer);
+    qTimer = setTimeout(function () { loadQueue(); if (busy) loadSessions(); }, busy ? 5000 : 20000);
+  }
+
+  loadSessions();
+  loadQueue();
+})();
+</script>
+{% endblock %}

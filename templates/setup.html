@@ -1,0 +1,547 @@
+{% extends "base.html" %}
+{% set active = 'mark' %}
+{% block title %}Set up an exam{% endblock %}
+{% block topbar_title %}Mark an exam{% endblock %}
+{% block topbar_context %}Step 1 of 2: set up the exam{% endblock %}
+
+{% block head %}
+<style>
+  .setup-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--s6); align-items: start; }
+  @media (max-width: 1080px) { .setup-layout { grid-template-columns: 1fr; } .setup-summary { position: static !important; } }
+  .setup-form .panel + .panel { margin-top: var(--s5); }
+  .form-rows > * + * { margin-top: var(--s4); }
+
+  .material + .material { margin-top: var(--s6); padding-top: var(--s6); border-top: 1px solid var(--line); }
+  .material-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s3); flex-wrap: wrap; }
+  .material-title { font-weight: 650; }
+  .material-desc { font-size: 14px; color: var(--ink-2); }
+  .file-badge { display: none; }
+  .upload-area, .camera-area { display: none; margin-top: var(--s3); }
+  .upload-area.show, .camera-area.show { display: block; }
+
+  .cam-view { position: relative; aspect-ratio: 4 / 3; max-height: 420px; background: #000; border-radius: var(--r-md); overflow: hidden; transition: opacity var(--t-fast); }
+  .cam-view video { width: 100%; height: 100%; object-fit: contain; }
+  .cam-status { position: absolute; top: var(--s3); left: var(--s3); display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; background: rgba(0,0,0,.6); color: #fff; font-size: 13.5px; font-weight: 600; }
+  .cam-status.live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #3CC27A; }
+  .cam-controls { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s3); }
+  .cam-controls .select { flex: 1; }
+  .shutter-btn { flex: none; }
+
+  .file-list { display: flex; flex-direction: column; gap: 6px; margin-top: var(--s3); }
+  .file-list:empty { display: none; }
+  .file-item { display: flex; align-items: center; gap: var(--s3); padding: 8px var(--s3); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); font-size: 14px; }
+  .file-item i.lead { color: var(--ink-3); }
+  .file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-source { font-size: 13.5px; color: var(--ink-3); }
+
+  .setup-submit { margin-top: var(--s5); display: flex; flex-direction: column; gap: var(--s3); }
+  .message-box { display: none; }
+  .message-box.show { display: flex; }
+
+  .setup-summary { position: sticky; top: calc(var(--topbar-h) + var(--s5)); }
+  .summary-row { display: flex; justify-content: space-between; gap: var(--s3); padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .summary-row:first-child { border-top: 0; padding-top: 0; }
+  .sr-label { color: var(--ink-3); }
+  .sr-value { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .sr-value.sr-empty { color: var(--ink-3); font-weight: 400; }
+  .checklist { display: flex; flex-direction: column; gap: var(--s3); }
+  .checklist-item { display: flex; align-items: center; gap: var(--s3); font-size: 14px; color: var(--ink-2); }
+  .ci-dot { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 1.5px solid var(--control); display: grid; place-items: center; font-size: 12px; color: transparent; }
+  .checklist-item.done { color: var(--ink); }
+  .checklist-item.done .ci-dot { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .modal-details { margin-top: var(--s3); padding: var(--s3) var(--s4); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); font-size: 14px; }
+  .modal-details p + p { margin-top: 2px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Set up the exam</h1>
+    <p class="page-sub">Enter these details once. Every student you add to this session is marked against the same question paper and marking scheme.</p>
+  </div>
+</div>
+
+<div class="setup-layout">
+  <form id="setupForm" class="setup-form" novalidate>
+    <section class="panel">
+      <div class="panel-head"><h2 class="panel-title">Exam details</h2></div>
+      <div class="panel-body form-rows">
+        <div class="grid-3">
+          <div class="field">
+            <label class="label" for="f_year">Year <span class="req">*</span></label>
+            <input class="input" type="number" id="f_year" required min="2020" max="2100" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label class="label" for="f_term">Term <span class="req">*</span></label>
+            <select class="select" id="f_term" required>
+              <option value="">Choose term</option>
+              {% for term in terms %}<option value="{{ term }}">{{ term }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="f_class">Class <span class="req">*</span></label>
+            <select class="select" id="f_class" required>
+              <option value="">Choose class</option>
+              {% for class_name in classes %}<option value="{{ class_name }}">{{ class_name }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="f_stream">Stream <span class="req">*</span></label>
+            <input class="input" type="text" id="f_stream" required placeholder="For example A, B or East" />
+          </div>
+          <div class="field">
+            <label class="label" for="f_subject">Subject <span class="req">*</span></label>
+            <select class="select" id="f_subject" required>
+              <option value="">Choose subject</option>
+              {% for subject in subjects %}<option value="{{ subject }}">{{ subject }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label class="label" for="f_exam_type">Exam name <span class="req">*</span></label>
+            <input class="input" type="text" id="f_exam_type" required placeholder="For example Mid-term, End of term, Mock" />
+          </div>
+          <div class="field">
+            <label class="label" for="f_total_marks">Total marks <span class="req">*</span></label>
+            <input class="input" type="number" id="f_total_marks" required min="1" step="1" value="100" inputmode="numeric" />
+            <span class="hint">The most marks a student can get on this paper</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2 class="panel-title">Question paper and marking scheme</h2><p class="panel-desc">Photos or PDFs. Add pages in order.</p></div>
+      </div>
+      <div class="panel-body">
+        {% for key, title, desc, prefix in [
+          ('qp', 'Question paper', 'Every page of the paper the students sat.', 'qp'),
+          ('rubric', 'Marking scheme', 'The official marking guide, with marks for each question.', 'rubric')] %}
+        <div class="material">
+          <div class="material-head">
+            <div>
+              <div class="material-title">{{ title }} <span class="req" style="color:var(--bad)">*</span> <span class="chip file-badge" id="{{ prefix }}Badge">0 files</span></div>
+              <div class="material-desc">{{ desc }}</div>
+            </div>
+            <div class="segmented" role="group" aria-label="{{ title }} source">
+              <button type="button" class="mode-btn active" onclick="setMode('{{ key }}','upload',this)"><i class="fa-solid fa-upload"></i> Upload</button>
+              <button type="button" class="mode-btn" onclick="setMode('{{ key }}','camera',this)"><i class="fa-solid fa-camera"></i> Camera</button>
+            </div>
+          </div>
+          <input type="file" id="{{ prefix }}FileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" class="hidden" onchange="handleFileInput(event,'{{ key }}')" />
+          <div class="upload-area show" id="{{ key }}-upload-area">
+            <div class="dropzone" id="{{ prefix }}DropBox" role="button" tabindex="0"
+                 onclick="document.getElementById('{{ prefix }}FileInput').click()"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+              <div class="dropzone-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+              <div class="dropzone-title">Choose files or drag them here</div>
+              <div class="dropzone-hint">PDF, JPG, PNG or WEBP</div>
+            </div>
+          </div>
+          <div class="camera-area" id="{{ key }}-camera-area">
+            <div class="cam-view">
+              <video id="{{ prefix }}Video" autoplay playsinline muted></video>
+              <div class="cam-status" id="{{ prefix }}CamStatus"><i class="fa-solid fa-video-slash"></i> Off</div>
+            </div>
+            <div class="cam-controls">
+              <label class="sr-only" for="{{ prefix }}CamSelect">Camera</label>
+              <select class="select" id="{{ prefix }}CamSelect" onchange="switchCam('{{ key }}')"><option value="">Camera</option></select>
+              <button type="button" class="btn btn-primary shutter-btn" onclick="shoot('{{ key }}')"><i class="fa-solid fa-camera"></i> Take photo</button>
+            </div>
+            <canvas id="{{ prefix }}Canvas" class="hidden"></canvas>
+          </div>
+          <div class="file-list" id="{{ prefix }}FileList"></div>
+        </div>
+        {% endfor %}
+
+        <div class="material">
+          <div class="field">
+            <label class="label" for="f_rubric_text">Extra marking notes <span class="opt">(optional)</span></label>
+            <textarea class="textarea" id="f_rubric_text" placeholder="For example: accept equivalent units; ignore spelling in Section B"></textarea>
+            <span class="hint">Given to the AI with the marking scheme for every student.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="setup-submit">
+      <div class="callout message-box" id="messageBox" role="status"><i class="fa-solid fa-circle-info"></i><span id="messageText"></span></div>
+      <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Save and continue</button>
+    </div>
+  </form>
+
+  <aside class="setup-summary">
+    <section class="panel">
+      <div class="panel-head"><h2 class="panel-title">Summary</h2></div>
+      <div class="panel-body">
+        <div class="summary-row"><span class="sr-label">Subject</span><span class="sr-value sr-empty" id="sumSubject">Not chosen</span></div>
+        <div class="summary-row"><span class="sr-label">Class</span><span class="sr-value sr-empty" id="sumClass">Not chosen</span></div>
+        <div class="summary-row"><span class="sr-label">Term</span><span class="sr-value sr-empty" id="sumTerm">Not chosen</span></div>
+        <div class="summary-row"><span class="sr-label">Exam</span><span class="sr-value sr-empty" id="sumExamType">Not set</span></div>
+        <div class="summary-row"><span class="sr-label">Total marks</span><span class="sr-value" id="sumMarks">100</span></div>
+        <div class="summary-row"><span class="sr-label">Question paper</span><span class="sr-value sr-empty" id="sumQp">No files</span></div>
+        <div class="summary-row"><span class="sr-label">Marking scheme</span><span class="sr-value sr-empty" id="sumRubric">No files</span></div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-body">
+        <div class="checklist" id="setupChecklist">
+          <div class="checklist-item" id="ck-details"><span class="ci-dot"><i class="fa-solid fa-check"></i></span>Exam details filled in</div>
+          <div class="checklist-item" id="ck-qp"><span class="ci-dot"><i class="fa-solid fa-check"></i></span>Question paper added</div>
+          <div class="checklist-item" id="ck-rubric"><span class="ci-dot"><i class="fa-solid fa-check"></i></span>Marking scheme added</div>
+        </div>
+      </div>
+    </section>
+    <p class="hint mt-4">Use the clearest copy of the marking scheme you have. The AI scores each question against it, so a legible scheme gives more consistent marks.</p>
+  </aside>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal" id="modalBackdrop" data-static role="dialog" aria-modal="true" aria-labelledby="dupTitle">
+  <div class="modal-box">
+    <div class="modal-head"><h2 class="modal-title" id="dupTitle">This exam is already set up</h2></div>
+    <div class="modal-body">
+      <p>It already has <strong id="studentCount">0</strong> student record(s). Replacing it starts a new, empty session. The old one is kept as a backup folder on the server.</p>
+      <div class="modal-details" id="sessionDetails"></div>
+      <p class="mt-4">To add more students to the existing exam instead, go to <a href="{{ url_for('view_students') }}">Results</a> and choose <strong>Add students</strong>.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="cancelOverwrite()">Keep existing</button>
+      <button class="btn btn-danger" onclick="confirmOverwrite()">Replace it</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="rubricWarnBackdrop" data-static role="dialog" aria-modal="true" aria-labelledby="rwTitle">
+  <div class="modal-box">
+    <div class="modal-head"><h2 class="modal-title" id="rwTitle">Check the total marks</h2></div>
+    <div class="modal-body">
+      <div class="callout callout-warn"><i class="fa-solid fa-triangle-exclamation"></i><span id="rubricWarnText"></span></div>
+      <p class="mt-4">The exam is saved. Choose how to continue:</p>
+      <div class="callout callout-bad mt-4 hidden" id="rubricFixError" role="alert"><i class="fa-solid fa-circle-exclamation"></i><span></span></div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between">
+      <button class="btn btn-ghost" onclick="editAfterWarning()"><i class="fa-solid fa-pen"></i> Go back and edit</button>
+      <span class="row" style="gap:var(--s2);flex-wrap:wrap">
+        <button class="btn btn-secondary" id="keepTotalBtn" onclick="continueAfterSetup()">Keep and continue</button>
+        <button class="btn btn-primary hidden" id="useSuggestedBtn" onclick="useSuggestedTotal()"></button>
+      </span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const store    = { qp: [], rubric: [] };
+const streams  = { qp: null, rubric: null };
+const cameras  = { qp: [],   rubric: [] };
+const selCamId = { qp: null, rubric: null };
+const SUBMIT_LABEL = 'Save and continue';
+let pendingFormData = null;
+
+function el(id) { return document.getElementById(id); }
+
+/* ── Badges, summary, file list ── */
+function updateBadge(type) {
+  const badge = el(type === 'qp' ? 'qpBadge' : 'rubricBadge');
+  const n = store[type].length;
+  badge.textContent = n + ' file' + (n !== 1 ? 's' : '');
+  badge.style.display = n > 0 ? 'inline-flex' : 'none';
+  updateSummary();
+}
+function setSummaryField(id, value, fallback) {
+  const node = el(id);
+  if (!node) return;
+  if (value) { node.textContent = value; node.classList.remove('sr-empty'); }
+  else { node.textContent = fallback; node.classList.add('sr-empty'); }
+}
+function setChecklistItem(id, done) { const n = el(id); if (n) n.classList.toggle('done', !!done); }
+
+function updateSummary() {
+  const v = id => el(id) ? el(id).value.trim() : '';
+  const year = v('f_year'), term = v('f_term'), cls = v('f_class'), stream = v('f_stream');
+  const subj = v('f_subject'), etype = v('f_exam_type'), marks = v('f_total_marks');
+  setSummaryField('sumSubject', subj, 'Not chosen');
+  setSummaryField('sumClass', cls ? (cls + (stream ? ' ' + stream : '')) : '', 'Not chosen');
+  setSummaryField('sumTerm', term ? (term + (year ? ', ' + year : '')) : '', 'Not chosen');
+  setSummaryField('sumExamType', etype, 'Not set');
+  el('sumMarks').textContent = marks || '—';
+  const qp = store.qp.length, rb = store.rubric.length;
+  setSummaryField('sumQp', qp ? qp + ' file' + (qp === 1 ? '' : 's') : '', 'No files');
+  setSummaryField('sumRubric', rb ? rb + ' file' + (rb === 1 ? '' : 's') : '', 'No files');
+  setChecklistItem('ck-details', !!(year && term && cls && stream && subj && etype && marks));
+  setChecklistItem('ck-qp', qp > 0);
+  setChecklistItem('ck-rubric', rb > 0);
+}
+
+function renderFileList(type) {
+  const list = el(type === 'qp' ? 'qpFileList' : 'rubricFileList');
+  list.innerHTML = '';
+  store[type].forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    const isPdf = /\.pdf$/i.test(f.name);
+    item.innerHTML = `
+      <i class="fa-solid ${isPdf ? 'fa-file-pdf' : 'fa-image'} lead"></i>
+      <span class="file-name">${i + 1}. ${EM.esc(f.name)}</span>
+      <span class="file-source">${f._isCamera ? 'Camera' : 'File'}</span>
+      <button type="button" class="icon-btn icon-btn-sm" onclick="removeFile('${type}',${i})" aria-label="Remove ${EM.esc(f.name)}"><i class="fa-solid fa-xmark"></i></button>`;
+    list.appendChild(item);
+  });
+  updateBadge(type);
+}
+function removeFile(type, idx) { store[type].splice(idx, 1); renderFileList(type); }
+
+function addFiles(type, files) {
+  Array.from(files).forEach(f => {
+    const tagged = new File([f], f.name, { type: f.type });
+    tagged._isCamera = false;
+    store[type].push(tagged);
+  });
+  renderFileList(type);
+}
+function handleFileInput(e, type) { addFiles(type, e.target.files); e.target.value = ''; }
+
+/* ── Upload ↔ camera ── */
+function setMode(type, mode, btn) {
+  btn.parentElement.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  el(type + '-upload-area').classList.toggle('show', mode !== 'camera');
+  el(type + '-camera-area').classList.toggle('show', mode === 'camera');
+  if (mode === 'camera') startCam(type); else stopCam(type);
+}
+
+/* ── Camera (only started when the teacher picks Camera) ── */
+async function loadCameraList(type) {
+  try {
+    const tmp = await navigator.mediaDevices.getUserMedia({ video: true });
+    tmp.getTracks().forEach(t => t.stop());
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    cameras[type] = devices.filter(d => d.kind === 'videoinput');
+    const sel = el(type === 'qp' ? 'qpCamSelect' : 'rubricCamSelect');
+    sel.innerHTML = '';
+    cameras[type].forEach((c, i) => {
+      const o = document.createElement('option');
+      o.value = c.deviceId; o.text = c.label || `Camera ${i + 1}`;
+      sel.appendChild(o);
+    });
+    selCamId[type] = cameras[type].length > 1 ? cameras[type][cameras[type].length - 1].deviceId : (cameras[type][0] ? cameras[type][0].deviceId : null);
+    if (selCamId[type]) sel.value = selCamId[type];
+  } catch (e) { console.warn('Camera list error:', e); }
+}
+async function startCam(type) {
+  const statusEl = el(type === 'qp' ? 'qpCamStatus' : 'rubricCamStatus');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    statusEl.className = 'cam-status';
+    statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Camera not available in this browser';
+    return;
+  }
+  if (!cameras[type].length) await loadCameraList(type);
+  const video = el(type === 'qp' ? 'qpVideo' : 'rubricVideo');
+  statusEl.className = 'cam-status';
+  statusEl.innerHTML = '<span class="spinner" style="width:12px;height:12px"></span> Starting camera';
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: selCamId[type] ? { exact: selCamId[type] } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    streams[type] = s;
+    video.srcObject = s;
+    const cam = cameras[type].find(c => c.deviceId === selCamId[type]);
+    statusEl.className = 'cam-status live';
+    statusEl.textContent = cam && cam.label ? cam.label.split('(')[0].trim() : 'Live';
+  } catch (e) {
+    statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Camera blocked — allow access or upload files';
+  }
+}
+function stopCam(type) {
+  if (streams[type]) { streams[type].getTracks().forEach(t => t.stop()); streams[type] = null; }
+  const statusEl = el(type === 'qp' ? 'qpCamStatus' : 'rubricCamStatus');
+  statusEl.className = 'cam-status';
+  statusEl.innerHTML = '<i class="fa-solid fa-video-slash"></i> Off';
+}
+function switchCam(type) {
+  selCamId[type] = el(type === 'qp' ? 'qpCamSelect' : 'rubricCamSelect').value;
+  stopCam(type); startCam(type);
+}
+function shoot(type) {
+  const video = el(type === 'qp' ? 'qpVideo' : 'rubricVideo');
+  const canvas = el(type === 'qp' ? 'qpCanvas' : 'rubricCanvas');
+  if (!video.videoWidth) { showMsg('The camera is not ready yet.', 'error'); return; }
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.toBlob(blob => {
+    const name = `${type === 'qp' ? 'question_paper' : 'marking_scheme'}_photo_${store[type].length + 1}.jpg`;
+    const file = new File([blob], name, { type: 'image/jpeg' });
+    file._isCamera = true;
+    store[type].push(file);
+    renderFileList(type);
+    const view = el(type + '-camera-area').querySelector('.cam-view');
+    if (view) { view.style.opacity = '0.3'; setTimeout(() => view.style.opacity = '1', 120); }
+  }, 'image/jpeg', 0.88);
+}
+
+/* ── Messages ── */
+function showMsg(text, type) {
+  const box = el('messageBox');
+  el('messageText').textContent = text;
+  box.className = 'callout message-box show ' + (type === 'success' ? 'callout-ok' : 'callout-bad');
+  box.querySelector('i').className = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation';
+}
+function hideMsg() { el('messageBox').className = 'callout message-box'; }
+function resetBtn() { const b = el('submitBtn'); b.disabled = false; b.textContent = SUBMIT_LABEL; }
+function busyBtn(label) { const b = el('submitBtn'); b.disabled = true; b.innerHTML = '<span class="spinner"></span> ' + label; }
+
+/* ── Validation ── */
+function validateForm() {
+  const checks = [['f_year', 'the year'], ['f_term', 'the term'], ['f_class', 'the class'], ['f_stream', 'the stream'],
+                  ['f_subject', 'the subject'], ['f_exam_type', 'the exam name'], ['f_total_marks', 'the total marks']];
+  for (const [id, name] of checks) {
+    if (!el(id).value.trim()) { showMsg(`Enter ${name}.`, 'error'); el(id).focus(); return false; }
+  }
+  const total = parseFloat(el('f_total_marks').value);
+  if (isNaN(total) || total <= 0) { showMsg('Total marks must be more than 0.', 'error'); el('f_total_marks').focus(); return false; }
+  if (!store.qp.length) { showMsg('Add at least one page of the question paper.', 'error'); return false; }
+  if (!store.rubric.length) { showMsg('Add at least one page of the marking scheme.', 'error'); return false; }
+  return true;
+}
+
+function buildFormData(extras = {}) {
+  const fd = new FormData();
+  ['year', 'term', 'class', 'stream', 'subject', 'exam_type', 'total_marks'].forEach(k => {
+    const id = k === 'class' ? 'f_class' : 'f_' + k;
+    fd.append(k, el(id).value.trim());
+  });
+  fd.append('rubric_text', el('f_rubric_text').value);
+  if (savedFolder) fd.append('replaces', savedFolder);
+  for (const [k, v] of Object.entries(extras)) fd.append(k, v);
+  store.qp.forEach(f => fd.append('question_papers[]', f, f.name));
+  store.rubric.forEach(f => fd.append('rubrics[]', f, f.name));
+  return fd;
+}
+
+/* ── Existing-session dialog ── */
+function showDuplicateModal(data) {
+  el('studentCount').textContent = data.student_count;
+  const i = data.session_info || {}, e = EM.esc;
+  el('sessionDetails').innerHTML = `
+    <p><strong>${e(i.subject)} (${e(i.exam_type)})</strong></p>
+    <p>${e(i.class)} ${e(i.stream)}, ${e(i.term)} ${e(i.year)}${i.total_marks ? `, out of ${e(i.total_marks)} marks` : ''}</p>`;
+  EM.openModal('modalBackdrop');
+}
+function hideModal() { EM.closeModal('modalBackdrop'); }
+
+let suggestedTotal = null;
+let savedFolder = '';   // the exam saved just before "Go back and edit"
+function fmtMarks(n) { return Number.isInteger(+n) ? String(+n) : String(+n); }
+function afterSetupSuccess(result, delayMs) {
+  if (result && result.exam_folder) savedFolder = result.exam_folder;
+  if (result && result.rubric_warning) {
+    el('rubricWarnText').textContent = result.rubric_warning;
+    suggestedTotal = result.rubric_suggested_total;
+    const entered = el('f_total_marks').value.trim();
+    el('keepTotalBtn').textContent = `Keep ${entered} and continue`;
+    const use = el('useSuggestedBtn');
+    use.classList.toggle('hidden', !suggestedTotal);
+    if (suggestedTotal) use.textContent = `Use ${fmtMarks(suggestedTotal)} marks`;
+    el('rubricFixError').classList.add('hidden');
+    hideMsg();
+    EM.openModal('rubricWarnBackdrop');
+    return;
+  }
+  setTimeout(() => location.href = '/choose-method', delayMs);
+}
+function continueAfterSetup() { EM.closeModal('rubricWarnBackdrop'); location.href = '/choose-method'; }
+
+/* The exam was saved; the form still holds everything, so the teacher can
+   correct any field and press Save again — that updates the same exam. */
+function editAfterWarning() {
+  EM.closeModal('rubricWarnBackdrop');
+  resetBtn();
+  showMsg('Your exam is saved. Correct anything you need, then press Save and continue again.', 'success');
+  const f = el('f_total_marks');
+  f.focus(); f.select();
+}
+
+async function useSuggestedTotal() {
+  const btn = el('useSuggestedBtn');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/session/total-marks', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ total_marks: suggestedTotal }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.success) throw new Error(d.message || 'Could not change the total.');
+    el('f_total_marks').value = d.total_marks; updateSummary();
+    EM.toast(`Total marks changed to ${d.total_marks}`);
+    continueAfterSetup();
+  } catch (e) {
+    const box = el('rubricFixError');
+    box.querySelector('span').textContent = e.message;
+    box.classList.remove('hidden');
+    btn.disabled = false;
+  }
+}
+
+function cancelOverwrite() {
+  hideModal(); pendingFormData = null; resetBtn();
+  showMsg('Nothing was changed. The existing exam and its students are kept.', 'success');
+}
+async function confirmOverwrite() {
+  hideModal();
+  busyBtn('Replacing…');
+  try {
+    const res = await fetch('/setup', { method: 'POST', body: buildFormData({ force_overwrite: 'true' }) });
+    const result = await res.json();
+    if (result.success) { showMsg('Exam replaced. Opening the next step…', 'success'); afterSetupSuccess(result, 700); }
+    else { showMsg(result.message || 'Setup failed.', 'error'); resetBtn(); }
+  } catch (e) { showMsg('Could not reach the server. Check your connection and try again.', 'error'); resetBtn(); }
+  pendingFormData = null;
+}
+
+el('setupForm').onsubmit = async function (e) {
+  e.preventDefault();
+  if (!validateForm()) return;
+  busyBtn('Uploading files…');
+  hideMsg();
+  const fd = buildFormData();
+  pendingFormData = fd;
+  try {
+    const res = await fetch('/setup', { method: 'POST', body: fd });
+    const result = await res.json();
+    if (res.status === 409 && result.duplicate_session) { showDuplicateModal(result); resetBtn(); return; }
+    if (result.success) {
+      showMsg(`Saved ${result.files_saved.question_papers} question paper file(s) and ${result.files_saved.rubrics} marking scheme file(s). Opening the next step…`, 'success');
+      afterSetupSuccess(result, 700);
+    } else { showMsg(result.message || 'Setup failed.', 'error'); resetBtn(); }
+  } catch (err) {
+    showMsg('Upload failed. Check your connection and try again.', 'error'); resetBtn();
+  }
+};
+
+/* ── Init ── */
+el('f_year').value = new Date().getFullYear();
+['qpDropBox', 'rubricDropBox'].forEach(id => {
+  const type = id === 'qpDropBox' ? 'qp' : 'rubric';
+  const box = el(id);
+  box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('dragover'); });
+  box.addEventListener('dragleave', () => box.classList.remove('dragover'));
+  box.addEventListener('drop', e => {
+    e.preventDefault(); box.classList.remove('dragover');
+    addFiles(type, Array.from(e.dataTransfer.files).filter(f => /\.(pdf|jpe?g|png|webp)$/i.test(f.name)));
+  });
+});
+['f_year', 'f_term', 'f_class', 'f_stream', 'f_subject', 'f_exam_type', 'f_total_marks'].forEach(id => {
+  el(id).addEventListener('input', updateSummary);
+  el(id).addEventListener('change', updateSummary);
+});
+updateSummary();
+window.addEventListener('beforeunload', () => { stopCam('qp'); stopCam('rubric'); });
+</script>
+{% endblock %}
